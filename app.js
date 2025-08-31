@@ -1,68 +1,97 @@
-import { auth, db } from './firebase.js';
-import { signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp, increment, collection } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import { db, auth, doc, setDoc, getDoc, updateDoc, signInAnonymously, onAuthStateChanged, serverTimestamp, increment } from './firebase.js';
 
-document.addEventListener("DOMContentLoaded", () => {
+const telegram = window.Telegram.WebApp;
+telegram.expand();
 
-    const profilePic = document.getElementById('profile-pic');
-    const userNameDisplay = document.getElementById('user-name-display');
-    const totalPointsDisplay = document.getElementById('total-points');
-    const watchAdBtn = document.querySelector('.watch-ad-btn');
+let userData = {};
+let userId;
 
-    let firebaseUID = null;
-    let telegramUser = null;
-    let telegramId = null;
-    let totalPoints = 0;
+// Telegram User Init
+if (telegram.initDataUnsafe && telegram.initDataUnsafe.user) {
+  const user = telegram.initDataUnsafe.user;
+  userId = user.id.toString();
+  document.getElementById('profile-pic').src = user.photo_url || "default.png";
+  document.getElementById('username').textContent = user.first_name;
+  document.getElementById('telegram-id').textContent = userId;
+  document.getElementById('profile-username').textContent = user.username || user.first_name;
+  document.getElementById('profile-telegram-id').textContent = userId;
+}
 
-    // Telegram WebApp Integration
-    try {
-        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) {
-            telegramUser = window.Telegram.WebApp.initDataUnsafe.user;
-            telegramId = String(telegramUser.id);
-            if (telegramUser.photo_url) profilePic.src = telegramUser.photo_url;
-            userNameDisplay.textContent = telegramUser.first_name;
-        }
-    } catch(e) {
-        console.warn("Telegram init error", e);
+// Firebase Auth Anonymous
+signInAnonymously(auth).catch(console.error);
+
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    const userRef = doc(db, "users", userId);
+    const snap = await getDoc(userRef);
+    if (!snap.exists()) {
+      await setDoc(userRef, {
+        username: telegram.initDataUnsafe.user.username,
+        telegramId: userId,
+        points: 0,
+        referrals: 0,
+        referralPoints: 0,
+        createdAt: serverTimestamp()
+      });
     }
+    loadUserData();
+  }
+});
 
-    // Firebase Anonymous Auth
-    signInAnonymously(auth).catch(console.error);
-    onAuthStateChanged(auth, async (user) => {
-        if(!user) return;
-        firebaseUID = user.uid;
-        const userDoc = doc(db, "users", firebaseUID);
-        const snap = await getDoc(userDoc);
+async function loadUserData() {
+  const userRef = doc(db, "users", userId);
+  const snap = await getDoc(userRef);
+  if (snap.exists()) {
+    userData = snap.data();
+    document.getElementById('points').textContent = userData.points || 0;
+    document.getElementById('profile-points').textContent = userData.points || 0;
+    document.getElementById('referral-count').textContent = userData.referrals || 0;
+    document.getElementById('referral-points').textContent = userData.referralPoints || 0;
+    document.getElementById('referral-link').value = `https://t.me/gravity_ad_bot?start=${userId}`;
+  }
+}
 
-        if(snap.exists()) {
-            const data = snap.data();
-            totalPoints = data.points || 0;
-        } else {
-            await setDoc(userDoc, {
-                firebaseUID,
-                telegramId,
-                userName: telegramUser?.first_name || 'User',
-                points: 0,
-                lastUpdated: serverTimestamp()
-            });
-            totalPoints = 0;
-        }
-        totalPointsDisplay.textContent = totalPoints;
+// Watch Ads
+document.getElementById('watch-ad-btn').addEventListener('click', async () => {
+  try {
+    await window.show_9669121().then(async () => {
+      await updateDoc(doc(db, "users", userId), { points: increment(10) });
+      loadUserData();
+      alert("You earned 10 points!");
     });
+  } catch (e) {
+    alert("Ad failed to load, try again later!");
+  }
+});
 
-    // Watch Ad Logic (Monetag)
-    watchAdBtn.addEventListener('click', async () => {
-        if(typeof window.show_9669121 === 'function') {
-            window.show_9669121().then(async () => {
-                totalPoints += 10;
-                totalPointsDisplay.textContent = totalPoints;
-                const userDoc = doc(db, "users", firebaseUID);
-                await updateDoc(userDoc, { points: increment(10), lastUpdated: serverTimestamp() });
-                alert('You earned 10 points!');
-            }).catch(console.error);
-        } else {
-            alert('Ad script not loaded.');
-        }
-    });
+// Copy Referral Link
+document.getElementById('copy-referral').addEventListener('click', () => {
+  const link = document.getElementById('referral-link');
+  link.select();
+  document.execCommand('copy');
+  alert("Referral link copied!");
+});
 
+// Withdraw Points
+document.getElementById('withdraw-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const amount = parseInt(document.getElementById('withdraw-amount').value);
+  const method = document.getElementById('payment-method').value;
+  const accountId = document.getElementById('account-id').value;
+
+  if (amount <= 0 || amount > userData.points) {
+    return alert("Invalid amount");
+  }
+
+  await updateDoc(doc(db, "users", userId), { points: increment(-amount) });
+  await setDoc(doc(db, "withdrawals", `${userId}_${Date.now()}`), {
+    telegramId: userId,
+    amount,
+    method,
+    accountId,
+    status: "pending",
+    createdAt: serverTimestamp()
+  });
+  alert("Withdrawal request submitted!");
+  loadUserData();
 });

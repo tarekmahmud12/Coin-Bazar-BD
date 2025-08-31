@@ -1,82 +1,87 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Coin Bazar Web App</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Coin Bazar</title>
+  <link rel="stylesheet" href="style.css" />
 
-<!-- Monetag Ads SDK -->
-<script src="//libtl.com/sdk.js" data-zone="9669121" data-sdk="show_9669121"></script>
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-<!-- Firebase SDK -->
-<script type="module" src="firebase.js"></script>
-
-<!-- App JS -->
-<script type="module" src="app.js"></script>
-
-<!-- CSS -->
-<link rel="stylesheet" href="style.css">
+  <!-- Monetag SDK -->
+  <script src='//libtl.com/sdk.js' data-zone='9669121' data-sdk='show_9669121'></script>
 </head>
 <body>
-<div class="app-container">
+  <!-- ====== Navbar ====== -->
+  <nav class="navbar">
+    <button data-page="home" class="active">🏠 Home</button>
+    <button data-page="refer">👥 Refer</button>
+    <button data-page="bonus">🎁 Bonus</button>
+    <button data-page="profile">👤 Profile</button>
+  </nav>
 
-    <!-- Header -->
-    <div class="app-header">
-        <h1>Coin Bazar</h1>
-    </div>
+  <!-- ====== Pages ====== -->
+  <main class="content">
 
-    <!-- Profile Card -->
-    <div class="profile-card">
-        <img id="profile-pic" src="" alt="Profile Picture" class="profile-pic">
-        <h2 id="user-name-display">User</h2>
-        <p>Total Points: <span id="total-points">0</span></p>
-    </div>
+    <!-- ====== Home Page ====== -->
+    <section id="home" class="page active">
+      <div class="dashboard-card">
+        <img id="profile-pic" class="profile-pic" src="default.png" alt="Profile" />
+        <h2 id="username">User</h2>
+        <p>Telegram ID: <span id="telegram-id"></span></p>
+        <p class="points">💰 Points: <span id="points">0</span></p>
+        <button id="watch-ad-btn" class="btn primary">▶ Watch Ad & Earn 10 Points</button>
+      </div>
+    </section>
 
-    <!-- Watch Ad -->
-    <button class="watch-ad-btn">Watch Ad & Earn Points</button>
-    <span id="ad-timer">Ready!</span>
+    <!-- ====== Refer Page ====== -->
+    <section id="refer" class="page">
+      <h2>Refer & Earn</h2>
+      <p>Share your referral link and earn 200 coins per referral!</p>
+      <input id="referral-link" readonly />
+      <button id="copy-referral" class="btn secondary">📋 Copy Link</button>
+      <p>Referrals: <span id="referral-count">0</span></p>
+      <p>Referral Points: <span id="referral-points">0</span></p>
+    </section>
 
-    <!-- Tasks -->
-    <div class="tasks-section">
-        <h3>Tasks</h3>
-        <button class="task-btn" data-task-id="1" data-task-url="https://example.com/task1">Task 1</button>
-        <button class="task-btn" data-task-id="2" data-task-url="https://example.com/task2">Task 2</button>
-    </div>
+    <!-- ====== Bonus Page ====== -->
+    <section id="bonus" class="page">
+      <h2>Join Channels & Earn Bonus</h2>
+      <div id="bonus-container">
+        <button data-bonus-name="channel1" data-channel-link="https://t.me/coinbazarbd" data-bonus-points="20" class="btn bonus-btn">
+          Join Channel 1 +20 Points
+        </button>
+        <button data-bonus-name="channel2" data-channel-link="https://t.me/cryptoearn" data-bonus-points="20" class="btn bonus-btn">
+          Join Channel 2 +20 Points
+        </button>
+      </div>
+    </section>
 
-    <!-- Bonus -->
-    <div class="bonus-section">
-        <h3>Bonus</h3>
-        <button class="join-btn" data-bonus-name="bonus1" data-bonus-points="50" data-channel-link="https://t.me/joinchat/bonus1">Join Now</button>
-        <button class="join-btn" data-bonus-name="bonus2" data-bonus-points="100" data-channel-link="https://t.me/joinchat/bonus2">Join Now</button>
-    </div>
+    <!-- ====== Profile Page ====== -->
+    <section id="profile" class="page">
+      <h2>Your Profile</h2>
+      <div class="profile-card">
+        <p><strong>Username:</strong> <span id="profile-username"></span></p>
+        <p><strong>Telegram ID:</strong> <span id="profile-telegram-id"></span></p>
+        <p><strong>Total Points:</strong> <span id="profile-points">0</span></p>
+      </div>
+      
+      <h3>Withdraw</h3>
+      <form id="withdraw-form">
+        <select id="payment-method">
+          <option value="">Select Payment Method</option>
+          <option value="bkash">Bkash</option>
+          <option value="nagad">Nagad</option>
+          <option value="rocket">Rocket</option>
+        </select>
+        <input id="account-id" placeholder="Enter Account ID" required />
+        <input id="withdraw-amount" type="number" placeholder="Enter Points" required />
+        <button class="btn primary">Withdraw</button>
+      </form>
+    </section>
+  </main>
 
-    <!-- Withdraw -->
-    <div class="withdraw-section">
-        <h3>Withdraw</h3>
-        <form id="withdraw-form">
-            <label for="payment-method">Payment Method:</label>
-            <select id="payment-method">
-                <option value="bkash">Bkash</option>
-                <option value="nagad">Nagad</option>
-                <option value="grameenphone">Grameenphone</option>
-            </select>
-            <label for="account-id">Account ID:</label>
-            <input type="text" id="account-id" placeholder="Enter account ID" required>
-            <label for="amount">Amount:</label>
-            <input type="number" id="amount" placeholder="Enter points" required>
-            <button type="submit">Withdraw</button>
-            <p id="withdraw-message"></p>
-        </form>
-    </div>
-
-    <!-- Withdrawal History -->
-    <div class="withdraw-history-section">
-        <h3>History</h3>
-        <p>Total Withdrawals: <span id="total-withdrawals-count">0</span></p>
-        <p>Total Points Withdrawn: <span id="total-points-withdrawn">0</span></p>
-        <ul id="withdrawal-history-list"></ul>
-    </div>
-
-</div>
+  <script type="module" src="app.js"></script>
 </body>
 </html>
