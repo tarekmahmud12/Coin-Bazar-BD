@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Gravity Ad</title>
   <link rel="stylesheet" href="style.css" />
@@ -9,66 +9,116 @@
   <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-  <!-- Monetag SDK (9669121) -->
+  <!-- Monetag SDK (your zone) -->
   <script src="//libtl.com/sdk.js" data-zone="9669121" data-sdk="show_9669121"></script>
 </head>
 <body>
-  <!-- App Shell -->
+  <!-- App Bar -->
   <header class="appbar">
     <div class="brand">
-      <span class="brand-dot"></span>
-      <span class="brand-title">Gravity Ad</span>
+      <svg class="brand-logo" viewBox="0 0 24 24" width="22" height="22" aria-hidden>
+        <circle cx="12" cy="12" r="10" fill="#6d5dfc"></circle>
+        <path d="M8 12h8v2H8z" fill="#fff"></path>
+      </svg>
+      <span id="appTitle">Gravity Ad</span>
     </div>
-    <div class="mode-pill" id="modePill">Auto</div>
+
+    <div class="app-actions">
+      <button id="settingsBtn" class="icon-btn" title="Settings">
+        <!-- gear svg -->
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06A2 2 0 0 1 2.3 16.88l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82L4.3 2.3A2 2 0 0 1 7.13.47l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V0a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51c.58.19 1.14.56 1.51 1l.09.09a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.44.32.79.73 1.02 1.19z" />
+        </svg>
+      </button>
+    </div>
   </header>
 
+  <!-- Settings Modal -->
+  <div id="settingsModal" class="modal hidden">
+    <div class="modal-card glass">
+      <h3 id="settingsTitle">Settings</h3>
+
+      <label class="label" for="themeSwitcher">Theme</label>
+      <select id="themeSwitcher">
+        <option value="auto">Auto</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+      </select>
+
+      <label class="label" for="languageSwitcher">Language</label>
+      <select id="languageSwitcher">
+        <option value="en">English</option>
+        <option value="bn">বাংলা</option>
+      </select>
+
+      <div class="modal-actions">
+        <button id="closeSettings" class="btn btn-ghost">Close</button>
+        <button id="saveSettings" class="btn btn-primary">Save</button>
+      </div>
+    </div>
+  </div>
+
   <main class="container">
-    <!-- Home -->
+    <!-- HOME -->
     <section id="page-home" class="page active">
       <div class="card glass hero-card">
         <img id="profilePic" class="avatar" src="https://i.pravatar.cc/200?img=1" alt="Profile" />
-        <h2 id="displayName" class="title">User</h2>
+        <h2 id="displayName">User</h2>
         <p class="muted">Telegram ID: <span id="tgId">—</span></p>
 
         <div class="stats">
           <div class="stat">
-            <span class="stat-label">Points</span>
+            <span class="stat-label" id="coinsLabel">Coins</span>
             <span id="pointsHome" class="stat-value">0</span>
           </div>
           <div class="stat">
-            <span class="stat-label">Referrals</span>
-            <span id="refCountHome" class="stat-value">0</span>
+            <span class="stat-label" id="moneyLabel">Equivalent</span>
+            <span id="moneyHome" class="stat-value">৳0.00</span>
           </div>
         </div>
 
-        <a data-target="page-ads" class="btn btn-primary btn-lg nav-link">Watch Ads & Earn</a>
+        <div class="hero-actions">
+          <button id="watchAdBtn" class="btn btn-primary btn-lg">
+            <svg class="btn-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
+            <span id="watchAdText">Watch Ad & Earn 10 Coins</span>
+          </button>
+          <a id="tasksQuick" class="btn btn-ghost nav-link" data-target="page-tasks">Go to Tasks</a>
+        </div>
       </div>
     </section>
 
-    <!-- Watch Ads -->
-    <section id="page-ads" class="page">
+    <!-- TASKS -->
+    <section id="page-tasks" class="page">
       <div class="card glass">
-        <h3>Watch Ads</h3>
-        <p class="muted">Watch a rewarded ad to earn <strong>+10</strong> points.</p>
+        <h3 id="tasksTitle">Tasks</h3>
+        <p class="muted" id="tasksDesc">Complete tasks and earn coins.</p>
 
-        <div class="ad-panel">
-          <div>
-            <div class="chip">Cycle watched: <span id="cycleWatched">0</span> / <span id="cycleMax">10</span></div>
-            <div class="chip">Timer: <span id="adTimer">Ready</span></div>
+        <div id="tasksList" class="list">
+          <div class="task-item">
+            <div>
+              <div class="task-title" data-i18n="task1_title">Watch full video</div>
+              <div class="muted" data-i18n="task1_desc">Stay on the page 15s</div>
+            </div>
+            <button class="btn btn-primary task-btn" data-points="15" data-url="https://www.youtube.com/watch?v=8P9c4NfMWH8">Do</button>
           </div>
-          <button id="watchAdBtn" class="btn btn-primary">Watch Ad</button>
-        </div>
 
-        <div class="divider"></div>
-        <p class="tip">Tip: If an ad fails to load, try again in a few seconds.</p>
+          <div class="task-item">
+            <div>
+              <div class="task-title" data-i18n="task2_title">Like video</div>
+              <div class="muted" data-i18n="task2_desc">Open link and like</div>
+            </div>
+            <button class="btn btn-primary task-btn" data-points="5" data-url="https://youtube.com/shorts/Kdi0PLG-jrI">Do</button>
+          </div>
+        </div>
       </div>
     </section>
 
-    <!-- Refer -->
+    <!-- REFER -->
     <section id="page-refer" class="page">
       <div class="card glass">
-        <h3>Refer & Earn</h3>
-        <p class="muted">Share your link. You’ll get <strong>200</strong> points per friend.</p>
+        <h3 id="referTitle">Refer & Earn</h3>
+        <p class="muted" id="referDesc">Invite friends to earn.</p>
 
         <label class="label">Your referral link</label>
         <div class="input-group">
@@ -78,65 +128,53 @@
 
         <div class="grid-2">
           <div class="stat-tile">
-            <span class="stat-label">Total Referrals</span>
-            <span id="refCount" class="stat-value">0</span>
+            <span class="stat-label">Referrals</span>
+            <div id="refCount" class="stat-value">0</div>
           </div>
           <div class="stat-tile">
             <span class="stat-label">Referral Points</span>
-            <span id="refPoints" class="stat-value">0</span>
+            <div id="refPoints" class="stat-value">0</div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Bonus -->
+    <!-- BONUS -->
     <section id="page-bonus" class="page">
       <div class="card glass">
-        <h3>Join & Earn Bonus</h3>
+        <h3 id="bonusTitle">Bonus</h3>
         <div class="bonus-list" id="bonusList">
-          <!-- Example bonus items -->
+          <!-- items injected or static -->
           <div class="bonus-item">
             <div>
-              <div class="bonus-title">Join Channel 1</div>
-              <div class="muted">+20 points</div>
+              <div class="bonus-title">Subscribe Channel</div>
+              <div class="muted">+20 Coins</div>
             </div>
-            <button class="btn btn-primary bonus-btn"
-                    data-name="channel1"
-                    data-link="https://t.me/coinbazarbd"
-                    data-points="20">Join</button>
-          </div>
-          <div class="bonus-item">
-            <div>
-              <div class="bonus-title">Join Channel 2</div>
-              <div class="muted">+20 points</div>
-            </div>
-            <button class="btn btn-primary bonus-btn"
-                    data-name="channel2"
-                    data-link="https://t.me/cryptoearn"
-                    data-points="20">Join</button>
+            <button class="btn btn-primary bonus-btn" data-link="https://t.me/coinbazarbd" data-points="20">Join</button>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Profile (includes Withdraw) -->
+    <!-- PROFILE (WITHDRAW) -->
     <section id="page-profile" class="page">
       <div class="card glass">
-        <h3>Your Profile</h3>
+        <img id="pProfilePic" class="avatar" src="https://i.pravatar.cc/200?img=2" alt="Profile" />
+        <h3 id="pUsername">User</h3>
+        <p class="muted">Telegram ID: <span id="pTgId">—</span></p>
 
         <div class="kv">
-          <span>Username</span><strong id="pUsername">—</strong>
+          <span id="totalCoinsLabel">Total Coins</span>
+          <strong id="pPoints">0</strong>
         </div>
         <div class="kv">
-          <span>Telegram ID</span><strong id="pTgId">—</strong>
-        </div>
-        <div class="kv">
-          <span>Total Points</span><strong id="pPoints">0</strong>
+          <span id="totalMoneyLabel">Equivalent</span>
+          <strong id="pMoney">৳0.00</strong>
         </div>
 
         <div class="divider"></div>
 
-        <h4>Withdraw</h4>
+        <h4 id="withdrawTitle">Withdraw</h4>
         <form id="withdrawForm" class="form">
           <label class="label">Payment Method</label>
           <select id="payMethod" required>
@@ -150,24 +188,48 @@
           <label class="label">Account ID</label>
           <input id="accountId" placeholder="Enter account ID" required />
 
-          <label class="label">Amount (points)</label>
-          <input id="amount" type="number" min="1" placeholder="Enter points" required />
+          <label class="label">Amount (coins)</label>
+          <input id="amount" type="number" min="1" placeholder="Enter coins" required />
 
-          <button class="btn btn-primary" type="submit">Withdraw</button>
+          <div class="form-actions">
+            <button class="btn btn-ghost" type="reset">Reset</button>
+            <button class="btn btn-primary" type="submit">Withdraw</button>
+          </div>
         </form>
       </div>
     </section>
   </main>
 
-  <!-- Bottom Navigation -->
+  <!-- Bottom Navigation (professional icons - no emoji) -->
   <nav class="bottom-nav">
-    <button class="tab active" data-target="page-home">Home</button>
-    <button class="tab" data-target="page-ads">Watch Ads</button>
-    <button class="tab" data-target="page-refer">Refer</button>
-    <button class="tab" data-target="page-bonus">Bonus</button>
-    <button class="tab" data-target="page-profile">Profile</button>
+    <button class="tab active" data-target="page-home" aria-label="Home">
+      <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M3 11.5L12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-8.5z"/></svg>
+      <span>Home</span>
+    </button>
+
+    <button class="tab" data-target="page-tasks" aria-label="Tasks">
+      <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M9 11H7v2h2v-2zm0-4H7v2h2V7zm0 8H7v2h2v-2zM13 7h6v2h-6zm0 4h6v2h-6zM3 5h18v14H3z"/></svg>
+      <span>Tasks</span>
+    </button>
+
+    <button class="tab" data-target="page-refer" aria-label="Refer">
+      <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z"/></svg>
+      <span>Refer</span>
+    </button>
+
+    <button class="tab" data-target="page-bonus" aria-label="Bonus">
+      <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 2l2.6 5.3L20 8.1l-4 3.6L17 18l-5-2.6L7 18l1-6.3L4 8.1l5.4-.8L12 2z"/></svg>
+      <span>Bonus</span>
+    </button>
+
+    <button class="tab" data-target="page-profile" aria-label="Profile">
+      <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v1h20v-1c0-3.3-6.7-5-10-5z"/></svg>
+      <span>Profile</span>
+    </button>
   </nav>
 
+  <!-- language dictionary + app -->
+  <script type="module" src="lang.js"></script>
   <script type="module" src="app.js"></script>
 </body>
 </html>
