@@ -5,7 +5,6 @@ import { getAuth } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth
 const firebaseConfig = {
     apiKey: "AIzaSyBoTBGXZwfVzmqGQDtnDki6TJJ_PhvrfRY",
     authDomain: "coin-bazar-bd.firebaseapp.com",
-    databaseURL: "https://coin-bazar-bd-default-rtdb.asia-southeast1.firebasedatabase.app",
     projectId: "coin-bazar-bd",
     storageBucket: "coin-bazar-bd.firebasestorage.app",
     messagingSenderId: "442260048724",
