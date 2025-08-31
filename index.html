@@ -2,85 +2,171 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Coin Bazar</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Gravity Ad</title>
   <link rel="stylesheet" href="style.css" />
 
   <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-  <!-- Monetag SDK -->
-  <script src='//libtl.com/sdk.js' data-zone='9669121' data-sdk='show_9669121'></script>
+  <!-- Monetag SDK (9669121) -->
+  <script src="//libtl.com/sdk.js" data-zone="9669121" data-sdk="show_9669121"></script>
 </head>
 <body>
-  <!-- ====== Navbar ====== -->
-  <nav class="navbar">
-    <button data-page="home" class="active">🏠 Home</button>
-    <button data-page="refer">👥 Refer</button>
-    <button data-page="bonus">🎁 Bonus</button>
-    <button data-page="profile">👤 Profile</button>
-  </nav>
+  <!-- App Shell -->
+  <header class="appbar">
+    <div class="brand">
+      <span class="brand-dot"></span>
+      <span class="brand-title">Gravity Ad</span>
+    </div>
+    <div class="mode-pill" id="modePill">Auto</div>
+  </header>
 
-  <!-- ====== Pages ====== -->
-  <main class="content">
+  <main class="container">
+    <!-- Home -->
+    <section id="page-home" class="page active">
+      <div class="card glass hero-card">
+        <img id="profilePic" class="avatar" src="https://i.pravatar.cc/200?img=1" alt="Profile" />
+        <h2 id="displayName" class="title">User</h2>
+        <p class="muted">Telegram ID: <span id="tgId">—</span></p>
 
-    <!-- ====== Home Page ====== -->
-    <section id="home" class="page active">
-      <div class="dashboard-card">
-        <img id="profile-pic" class="profile-pic" src="default.png" alt="Profile" />
-        <h2 id="username">User</h2>
-        <p>Telegram ID: <span id="telegram-id"></span></p>
-        <p class="points">💰 Points: <span id="points">0</span></p>
-        <button id="watch-ad-btn" class="btn primary">▶ Watch Ad & Earn 10 Points</button>
+        <div class="stats">
+          <div class="stat">
+            <span class="stat-label">Points</span>
+            <span id="pointsHome" class="stat-value">0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Referrals</span>
+            <span id="refCountHome" class="stat-value">0</span>
+          </div>
+        </div>
+
+        <a data-target="page-ads" class="btn btn-primary btn-lg nav-link">Watch Ads & Earn</a>
       </div>
     </section>
 
-    <!-- ====== Refer Page ====== -->
-    <section id="refer" class="page">
-      <h2>Refer & Earn</h2>
-      <p>Share your referral link and earn 200 coins per referral!</p>
-      <input id="referral-link" readonly />
-      <button id="copy-referral" class="btn secondary">📋 Copy Link</button>
-      <p>Referrals: <span id="referral-count">0</span></p>
-      <p>Referral Points: <span id="referral-points">0</span></p>
-    </section>
+    <!-- Watch Ads -->
+    <section id="page-ads" class="page">
+      <div class="card glass">
+        <h3>Watch Ads</h3>
+        <p class="muted">Watch a rewarded ad to earn <strong>+10</strong> points.</p>
 
-    <!-- ====== Bonus Page ====== -->
-    <section id="bonus" class="page">
-      <h2>Join Channels & Earn Bonus</h2>
-      <div id="bonus-container">
-        <button data-bonus-name="channel1" data-channel-link="https://t.me/coinbazarbd" data-bonus-points="20" class="btn bonus-btn">
-          Join Channel 1 +20 Points
-        </button>
-        <button data-bonus-name="channel2" data-channel-link="https://t.me/cryptoearn" data-bonus-points="20" class="btn bonus-btn">
-          Join Channel 2 +20 Points
-        </button>
+        <div class="ad-panel">
+          <div>
+            <div class="chip">Cycle watched: <span id="cycleWatched">0</span> / <span id="cycleMax">10</span></div>
+            <div class="chip">Timer: <span id="adTimer">Ready</span></div>
+          </div>
+          <button id="watchAdBtn" class="btn btn-primary">Watch Ad</button>
+        </div>
+
+        <div class="divider"></div>
+        <p class="tip">Tip: If an ad fails to load, try again in a few seconds.</p>
       </div>
     </section>
 
-    <!-- ====== Profile Page ====== -->
-    <section id="profile" class="page">
-      <h2>Your Profile</h2>
-      <div class="profile-card">
-        <p><strong>Username:</strong> <span id="profile-username"></span></p>
-        <p><strong>Telegram ID:</strong> <span id="profile-telegram-id"></span></p>
-        <p><strong>Total Points:</strong> <span id="profile-points">0</span></p>
+    <!-- Refer -->
+    <section id="page-refer" class="page">
+      <div class="card glass">
+        <h3>Refer & Earn</h3>
+        <p class="muted">Share your link. You’ll get <strong>200</strong> points per friend.</p>
+
+        <label class="label">Your referral link</label>
+        <div class="input-group">
+          <input id="refLink" readonly />
+          <button id="copyRef" class="btn btn-ghost">Copy</button>
+        </div>
+
+        <div class="grid-2">
+          <div class="stat-tile">
+            <span class="stat-label">Total Referrals</span>
+            <span id="refCount" class="stat-value">0</span>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-label">Referral Points</span>
+            <span id="refPoints" class="stat-value">0</span>
+          </div>
+        </div>
       </div>
-      
-      <h3>Withdraw</h3>
-      <form id="withdraw-form">
-        <select id="payment-method">
-          <option value="">Select Payment Method</option>
-          <option value="bkash">Bkash</option>
-          <option value="nagad">Nagad</option>
-          <option value="rocket">Rocket</option>
-        </select>
-        <input id="account-id" placeholder="Enter Account ID" required />
-        <input id="withdraw-amount" type="number" placeholder="Enter Points" required />
-        <button class="btn primary">Withdraw</button>
-      </form>
+    </section>
+
+    <!-- Bonus -->
+    <section id="page-bonus" class="page">
+      <div class="card glass">
+        <h3>Join & Earn Bonus</h3>
+        <div class="bonus-list" id="bonusList">
+          <!-- Example bonus items -->
+          <div class="bonus-item">
+            <div>
+              <div class="bonus-title">Join Channel 1</div>
+              <div class="muted">+20 points</div>
+            </div>
+            <button class="btn btn-primary bonus-btn"
+                    data-name="channel1"
+                    data-link="https://t.me/coinbazarbd"
+                    data-points="20">Join</button>
+          </div>
+          <div class="bonus-item">
+            <div>
+              <div class="bonus-title">Join Channel 2</div>
+              <div class="muted">+20 points</div>
+            </div>
+            <button class="btn btn-primary bonus-btn"
+                    data-name="channel2"
+                    data-link="https://t.me/cryptoearn"
+                    data-points="20">Join</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Profile (includes Withdraw) -->
+    <section id="page-profile" class="page">
+      <div class="card glass">
+        <h3>Your Profile</h3>
+
+        <div class="kv">
+          <span>Username</span><strong id="pUsername">—</strong>
+        </div>
+        <div class="kv">
+          <span>Telegram ID</span><strong id="pTgId">—</strong>
+        </div>
+        <div class="kv">
+          <span>Total Points</span><strong id="pPoints">0</strong>
+        </div>
+
+        <div class="divider"></div>
+
+        <h4>Withdraw</h4>
+        <form id="withdrawForm" class="form">
+          <label class="label">Payment Method</label>
+          <select id="payMethod" required>
+            <option value="">Select</option>
+            <option value="bkash">Bkash</option>
+            <option value="nagad">Nagad</option>
+            <option value="rocket">Rocket</option>
+            <option value="binance">Binance</option>
+          </select>
+
+          <label class="label">Account ID</label>
+          <input id="accountId" placeholder="Enter account ID" required />
+
+          <label class="label">Amount (points)</label>
+          <input id="amount" type="number" min="1" placeholder="Enter points" required />
+
+          <button class="btn btn-primary" type="submit">Withdraw</button>
+        </form>
+      </div>
     </section>
   </main>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <button class="tab active" data-target="page-home">Home</button>
+    <button class="tab" data-target="page-ads">Watch Ads</button>
+    <button class="tab" data-target="page-refer">Refer</button>
+    <button class="tab" data-target="page-bonus">Bonus</button>
+    <button class="tab" data-target="page-profile">Profile</button>
+  </nav>
 
   <script type="module" src="app.js"></script>
 </body>
