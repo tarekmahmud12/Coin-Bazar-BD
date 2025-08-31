@@ -4,13 +4,16 @@ import {
 } from "./firebase.js";
 import { DICT, applyLanguage } from "./lang.js";
 
-// Telegram WebApp SDK থেকে ইউজার ডেটা
+// ======================= Telegram User Setup =======================
 const tg = window.Telegram?.WebApp;
 tg?.expand();
 let TG_USER = tg?.initDataUnsafe?.user || null;
 let UID = TG_USER ? String(TG_USER.id) : null;
 
-// DOM Elements
+console.log("🔹 Telegram User:", TG_USER);
+console.log("🔹 Telegram UID:", UID);
+
+// ======================= DOM Elements =======================
 const tabs = document.querySelectorAll('.bottom-nav .tab');
 const pages = document.querySelectorAll('.page');
 const settingsBtn = document.getElementById('settingsBtn');
@@ -35,15 +38,13 @@ const refLink = document.getElementById('refLink');
 const copyRef = document.getElementById('copyRef');
 const withdrawForm = document.getElementById('withdrawForm');
 
-// ১ কয়েন = ০.০১ টাকা
+// ======================= Constants =======================
 const COIN_TO_BDT = 0.01;
-
-// অ্যাপ স্টেট
 let userData = { points: 0, referrals: 0, referralPoints: 0 };
 let theme = localStorage.getItem('theme') || 'auto';
 let lang = localStorage.getItem('lang') || 'en';
 
-// থিম প্রয়োগ
+// ======================= Theme =======================
 function applyThemeMode(mode){
   if(mode === 'auto') {
     const scheme = tg?.colorScheme || 'dark';
@@ -55,7 +56,7 @@ function applyThemeMode(mode){
 }
 applyThemeMode(theme);
 
-// ভাষা প্রয়োগ
+// ======================= Language =======================
 function applyLang(l){
   lang = l;
   localStorage.setItem('lang', l);
@@ -64,7 +65,7 @@ function applyLang(l){
 }
 applyLang(lang);
 
-// সেটিংস মডাল
+// ======================= Settings =======================
 settingsBtn.addEventListener('click', ()=> settingsModal.classList.remove('hidden'));
 closeSettings.addEventListener('click', ()=> settingsModal.classList.add('hidden'));
 saveSettings.addEventListener('click', ()=>{
@@ -76,12 +77,12 @@ saveSettings.addEventListener('click', ()=>{
   settingsModal.classList.add('hidden');
 });
 
-// Telegram থিম চেঞ্জ
+// ======================= Telegram Theme Event =======================
 tg?.onEvent?.('themeChanged', ()=> { 
   if(theme === 'auto') applyThemeMode('auto'); 
 });
 
-// ন্যাভিগেশন
+// ======================= Navigation =======================
 tabs.forEach(btn=>{
   btn.addEventListener('click', ()=>{
     tabs.forEach(b=>b.classList.remove('active'));
@@ -92,7 +93,7 @@ tabs.forEach(btn=>{
   });
 });
 
-// Telegram থেকে ইউজারের ডেটা সেট করা
+// ======================= Populate Telegram User =======================
 function populateTelegram(){
   if(TG_USER){
     profilePic.src = TG_USER.photo_url || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
@@ -105,12 +106,16 @@ function populateTelegram(){
 }
 populateTelegram();
 
-// ইউজার ডকুমেন্ট তৈরি বা লোড
+// ======================= Ensure User Document =======================
 async function ensureUserDoc(){
-  if(!UID) return;
+  if(!UID) {
+    console.warn("⚠️ No Telegram UID found!");
+    return;
+  }
   const ref = doc(db, 'users', UID);
   const snap = await getDoc(ref);
   if(!snap.exists()){
+    console.log("🆕 Creating Firestore user document...");
     await setDoc(ref, {
       telegramId: UID,
       username: TG_USER?.username || TG_USER?.first_name || 'User',
@@ -120,22 +125,23 @@ async function ensureUserDoc(){
       referralPoints: 0,
       createdAt: serverTimestamp()
     });
+  } else {
+    console.log("✅ User document exists.");
   }
 }
 
-// ইউজারের ডেটা লোড
+// ======================= Load User Data =======================
 async function loadUserData(){
   if(!UID) return;
   const ref = doc(db, 'users', UID);
   const snap = await getDoc(ref);
-  if(!snap.exists()) return;
-
+  if(!snap.exists()) {
+    console.warn("⚠️ User data missing in Firestore!");
+    return;
+  }
   userData = snap.data();
-  userData.points = userData.points || 0;
-  userData.referrals = userData.referrals || 0;
-  userData.referralPoints = userData.referralPoints || 0;
+  console.log("📥 User Data Loaded:", userData);
 
-  // UI আপডেট
   pointsHome.textContent = String(userData.points);
   pPoints.textContent = String(userData.points);
   const money = (userData.points * COIN_TO_BDT).toFixed(2);
@@ -146,8 +152,9 @@ async function loadUserData(){
   refLink.value = `https://t.me/gravity_ad_bot?start=${UID}`;
 }
 
-// Firebase auth boot
+// ======================= Firebase Boot =======================
 async function boot(){
+  console.log("🚀 Booting Firebase...");
   await signInAnonymously(auth).catch(console.error);
   onAuthStateChanged(auth, async ()=>{
     if (!UID && auth.currentUser?.uid) {
@@ -159,32 +166,37 @@ async function boot(){
 }
 boot();
 
-// Watch Ads
+// ======================= Watch Ads =======================
 watchAdBtn.addEventListener('click', async ()=>{
-  if(!UID) return alert('Auth not ready');
+  if(!UID) {
+    console.error("❌ UID missing. Cannot reward points.");
+    return alert('Authentication not ready. Please try again.');
+  }
+
+  console.log("🎬 Watch Ads clicked for UID:", UID);
+
   try {
     if(typeof window.show_9669121 === 'function'){
+      console.log("✅ Monetag SDK Loaded. Showing ad...");
       await window.show_9669121();
+
+      console.log("🎯 Ad watched successfully. Updating Firestore...");
       await updateDoc(doc(db,'users',UID), { points: increment(10) });
+
+      console.log("✅ Firestore points updated!");
       await loadUserData();
-      alert('You earned 10 coins!');
+      alert('🎉 You earned 10 coins!');
     } else {
-      alert('Ad system not loaded');
+      console.warn("⚠️ Monetag SDK not loaded yet!");
+      alert('⚠️ Ad system not ready. Try again later.');
     }
-  } catch (e){
-    try {
-      await window.show_9669121('pop');
-      await updateDoc(doc(db,'users',UID), { points: increment(10) });
-      await loadUserData();
-      alert('You earned 10 coins!');
-    } catch (err){
-      console.error(err);
-      alert('Ad failed to load');
-    }
+  } catch (err){
+    console.error("❌ Ad failed:", err);
+    alert('⚠️ Ad failed to load. Try again later.');
   }
 });
 
-// Referral copy
+// ======================= Copy Referral =======================
 copyRef.addEventListener('click', async ()=>{
   try {
     await navigator.clipboard.writeText(refLink.value);
@@ -195,7 +207,7 @@ copyRef.addEventListener('click', async ()=>{
   }
 });
 
-// Withdraw form
+// ======================= Withdraw Form =======================
 withdrawForm.addEventListener('submit', async (e)=>{
   e.preventDefault();
   const method = document.getElementById('payMethod').value;
