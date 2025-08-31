@@ -1,84 +1,82 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Coin Bazar WebApp</title>
-  <!-- External CSS -->
-  <link rel="stylesheet" href="css/style.css">
-  <!-- Monetag Ads SDK -->
-  <script src="//libtl.com/sdk.js" data-zone="9669121" data-sdk="show_9669121"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coin Bazar Web App</title>
+
+<!-- Monetag Ads SDK -->
+<script src="//libtl.com/sdk.js" data-zone="9669121" data-sdk="show_9669121"></script>
+
+<!-- Firebase SDK -->
+<script type="module" src="firebase.js"></script>
+
+<!-- App JS -->
+<script type="module" src="app.js"></script>
+
+<!-- CSS -->
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="app-container">
+<div class="app-container">
+
     <!-- Header -->
-    <header class="app-header">
-      <div class="profile-card">
-        <img id="profile-pic" class="profile-pic" src="default-avatar.png" alt="Profile Picture">
+    <div class="app-header">
+        <h1>Coin Bazar</h1>
+    </div>
+
+    <!-- Profile Card -->
+    <div class="profile-card">
+        <img id="profile-pic" src="" alt="Profile Picture" class="profile-pic">
         <h2 id="user-name-display">User</h2>
         <p>Total Points: <span id="total-points">0</span></p>
-      </div>
-    </header>
+    </div>
 
-    <!-- Main Content -->
-    <main class="main-content">
-      <!-- Watch Ad Section -->
-      <section id="home-page" class="page active">
-        <button class="watch-ad-btn">Watch Ad & Earn Points</button>
-      </section>
+    <!-- Watch Ad -->
+    <button class="watch-ad-btn">Watch Ad & Earn Points</button>
+    <span id="ad-timer">Ready!</span>
 
-      <!-- Tasks Section -->
-      <section id="tasks-page" class="page">
+    <!-- Tasks -->
+    <div class="tasks-section">
         <h3>Tasks</h3>
-        <div class="task-buttons">
-          <button class="task-btn" data-task-id="1" data-task-url="https://example.com/task1">Task 1</button>
-          <button class="task-btn" data-task-id="2" data-task-url="https://example.com/task2">Task 2</button>
-        </div>
-      </section>
+        <button class="task-btn" data-task-id="1" data-task-url="https://example.com/task1">Task 1</button>
+        <button class="task-btn" data-task-id="2" data-task-url="https://example.com/task2">Task 2</button>
+    </div>
 
-      <!-- Bonus Section -->
-      <section id="bonus-page" class="page">
+    <!-- Bonus -->
+    <div class="bonus-section">
         <h3>Bonus</h3>
-        <button class="join-btn" data-bonus-name="bonus1" data-bonus-points="50" data-channel-link="#">Join Now</button>
-        <button class="join-btn" data-bonus-name="bonus2" data-bonus-points="100" data-channel-link="#">Join Now</button>
-      </section>
+        <button class="join-btn" data-bonus-name="bonus1" data-bonus-points="50" data-channel-link="https://t.me/joinchat/bonus1">Join Now</button>
+        <button class="join-btn" data-bonus-name="bonus2" data-bonus-points="100" data-channel-link="https://t.me/joinchat/bonus2">Join Now</button>
+    </div>
 
-      <!-- Withdraw Section -->
-      <section id="withdraw-page" class="page">
+    <!-- Withdraw -->
+    <div class="withdraw-section">
         <h3>Withdraw</h3>
         <form id="withdraw-form">
-          <label for="payment-method">Payment Method:</label>
-          <select id="payment-method">
-            <option value="bkash">Bkash</option>
-            <option value="nagad">Nagad</option>
-          </select>
-
-          <label for="account-id">Account ID:</label>
-          <input type="text" id="account-id" placeholder="Enter account ID">
-
-          <label for="amount">Amount:</label>
-          <input type="number" id="amount" placeholder="Enter points">
-
-          <button type="submit">Withdraw</button>
+            <label for="payment-method">Payment Method:</label>
+            <select id="payment-method">
+                <option value="bkash">Bkash</option>
+                <option value="nagad">Nagad</option>
+                <option value="grameenphone">Grameenphone</option>
+            </select>
+            <label for="account-id">Account ID:</label>
+            <input type="text" id="account-id" placeholder="Enter account ID" required>
+            <label for="amount">Amount:</label>
+            <input type="number" id="amount" placeholder="Enter points" required>
+            <button type="submit">Withdraw</button>
+            <p id="withdraw-message"></p>
         </form>
+    </div>
 
-        <div id="withdrawal-history">
-          <p>Total Withdrawals: <span id="total-withdrawals-count">0</span></p>
-          <p>Total Points Withdrawn: <span id="total-points-withdrawn">0</span></p>
-        </div>
-      </section>
-    </main>
+    <!-- Withdrawal History -->
+    <div class="withdraw-history-section">
+        <h3>History</h3>
+        <p>Total Withdrawals: <span id="total-withdrawals-count">0</span></p>
+        <p>Total Points Withdrawn: <span id="total-points-withdrawn">0</span></p>
+        <ul id="withdrawal-history-list"></ul>
+    </div>
 
-    <!-- Footer Navigation -->
-    <footer class="app-footer">
-      <div class="nav-item active" data-page="home">Home</div>
-      <div class="nav-item" data-page="tasks">Tasks</div>
-      <div class="nav-item" data-page="withdraw">Withdraw</div>
-    </footer>
-  </div>
-
-  <!-- JS Files -->
-  <script type="module" src="js/firebase.js"></script>
-  <script type="module" src="js/app.js"></script>
+</div>
 </body>
 </html>
