@@ -4,66 +4,68 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Coin Bazar WebApp</title>
+  <!-- External CSS -->
   <link rel="stylesheet" href="css/style.css">
-
-  <!-- Monetag SDK -->
+  <!-- Monetag Ads SDK -->
   <script src="//libtl.com/sdk.js" data-zone="9669121" data-sdk="show_9669121"></script>
-
 </head>
 <body>
   <div class="app-container">
     <!-- Header -->
-    <header>
-      <img id="profile-pic" src="" alt="Profile Picture" class="profile-pic">
-      <h1 id="user-name-display">User</h1>
-      <span>Total Points: <span id="total-points">0</span></span>
+    <header class="app-header">
+      <div class="profile-card">
+        <img id="profile-pic" class="profile-pic" src="default-avatar.png" alt="Profile Picture">
+        <h2 id="user-name-display">User</h2>
+        <p>Total Points: <span id="total-points">0</span></p>
+      </div>
     </header>
 
-    <!-- Main Pages -->
+    <!-- Main Content -->
     <main class="main-content">
+      <!-- Watch Ad Section -->
       <section id="home-page" class="page active">
         <button class="watch-ad-btn">Watch Ad & Earn Points</button>
       </section>
 
+      <!-- Tasks Section -->
       <section id="tasks-page" class="page">
-        <h2>Tasks</h2>
-        <div class="tasks-container">
+        <h3>Tasks</h3>
+        <div class="task-buttons">
           <button class="task-btn" data-task-id="1" data-task-url="https://example.com/task1">Task 1</button>
           <button class="task-btn" data-task-id="2" data-task-url="https://example.com/task2">Task 2</button>
         </div>
-
-        <h2>Bonus</h2>
-        <div class="bonus-container">
-          <button class="join-btn" data-bonus-name="channel1" data-bonus-points="50" data-channel-link="https://t.me/joinchannel1">Join Now</button>
-          <button class="join-btn" data-bonus-name="channel2" data-bonus-points="50" data-channel-link="https://t.me/joinchannel2">Join Now</button>
-        </div>
       </section>
 
+      <!-- Bonus Section -->
+      <section id="bonus-page" class="page">
+        <h3>Bonus</h3>
+        <button class="join-btn" data-bonus-name="bonus1" data-bonus-points="50" data-channel-link="#">Join Now</button>
+        <button class="join-btn" data-bonus-name="bonus2" data-bonus-points="100" data-channel-link="#">Join Now</button>
+      </section>
+
+      <!-- Withdraw Section -->
       <section id="withdraw-page" class="page">
-        <h2>Withdraw</h2>
+        <h3>Withdraw</h3>
         <form id="withdraw-form">
-          <label>Payment Method:</label>
+          <label for="payment-method">Payment Method:</label>
           <select id="payment-method">
             <option value="bkash">Bkash</option>
             <option value="nagad">Nagad</option>
-            <option value="grameenphone">Grameenphone</option>
-            <option value="binance">Binance</option>
           </select>
 
-          <label>Account ID:</label>
+          <label for="account-id">Account ID:</label>
           <input type="text" id="account-id" placeholder="Enter account ID">
 
-          <label>Amount:</label>
+          <label for="amount">Amount:</label>
           <input type="number" id="amount" placeholder="Enter points">
 
-          <span id="withdraw-message"></span>
           <button type="submit">Withdraw</button>
         </form>
 
-        <h3>History</h3>
-        <ul id="withdrawal-history-list"></ul>
-        <p>Total Withdrawals: <span id="total-withdrawals-count">0</span></p>
-        <p>Total Points Withdrawn: <span id="total-points-withdrawn">0</span></p>
+        <div id="withdrawal-history">
+          <p>Total Withdrawals: <span id="total-withdrawals-count">0</span></p>
+          <p>Total Points Withdrawn: <span id="total-points-withdrawn">0</span></p>
+        </div>
       </section>
     </main>
 
@@ -75,12 +77,8 @@
     </footer>
   </div>
 
-  <!-- JS Scripts -->
+  <!-- JS Files -->
   <script type="module" src="js/firebase.js"></script>
-  <script type="module" src="js/telegram.js"></script>
-  <script type="module" src="js/ads.js"></script>
-  <script type="module" src="js/tasks.js"></script>
-  <script type="module" src="js/withdraw.js"></script>
   <script type="module" src="js/app.js"></script>
 </body>
 </html>
