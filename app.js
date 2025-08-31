@@ -3,18 +3,14 @@ import {
   doc, setDoc, getDoc, updateDoc, increment, serverTimestamp
 } from "./firebase.js";
 import { DICT, applyLanguage } from "./lang.js";
-import { initTelegram } from "./telegram.js";
-import { showRewardedAd } from "./ads.js";
-import { setupTaskAndBonusListeners } from "./tasks.js";
-import { setupWithdrawForm } from "./withdraw.js";
 
-// Telegram
-let tg = window.Telegram?.WebApp;
+// Telegram WebApp SDK থেকে ইউজার ডেটা
+const tg = window.Telegram?.WebApp;
 tg?.expand();
-let UID = null;
-let TG_USER = null;
+let TG_USER = tg?.initDataUnsafe?.user || null;
+let UID = TG_USER ? String(TG_USER.id) : null;
 
-// DOM refs
+// DOM Elements
 const tabs = document.querySelectorAll('.bottom-nav .tab');
 const pages = document.querySelectorAll('.page');
 const settingsBtn = document.getElementById('settingsBtn');
@@ -35,22 +31,21 @@ const pUsername = document.getElementById('pUsername');
 const pTgId = document.getElementById('pTgId');
 
 const watchAdBtn = document.getElementById('watchAdBtn');
-const tasksList = document.getElementById('tasksList');
 const refLink = document.getElementById('refLink');
 const copyRef = document.getElementById('copyRef');
 const withdrawForm = document.getElementById('withdrawForm');
-const totalPointsDisplay = document.getElementById('pPoints'); // Used in withdraw.js
 
-const COIN_TO_BDT = 0.01; // 1 coin = 0.01৳
+// ১ কয়েন = ০.০১ টাকা
+const COIN_TO_BDT = 0.01;
 
-// app state
+// অ্যাপ স্টেট
 let userData = { points: 0, referrals: 0, referralPoints: 0 };
 let theme = localStorage.getItem('theme') || 'auto';
 let lang = localStorage.getItem('lang') || 'en';
 
-// apply saved theme
-function applyThemeMode(mode) {
-  if (mode === 'auto') {
+// থিম প্রয়োগ
+function applyThemeMode(mode){
+  if(mode === 'auto') {
     const scheme = tg?.colorScheme || 'dark';
     document.body.classList.toggle('light', scheme === 'light');
   } else {
@@ -60,8 +55,8 @@ function applyThemeMode(mode) {
 }
 applyThemeMode(theme);
 
-// apply language
-function applyLang(l) {
+// ভাষা প্রয়োগ
+function applyLang(l){
   lang = l;
   localStorage.setItem('lang', l);
   applyLanguage(l);
@@ -69,10 +64,10 @@ function applyLang(l) {
 }
 applyLang(lang);
 
-// Settings modal toggles
-settingsBtn.addEventListener('click', () => settingsModal.classList.remove('hidden'));
-closeSettings.addEventListener('click', () => settingsModal.classList.add('hidden'));
-saveSettings.addEventListener('click', () => {
+// সেটিংস মডাল
+settingsBtn.addEventListener('click', ()=> settingsModal.classList.remove('hidden'));
+closeSettings.addEventListener('click', ()=> settingsModal.classList.add('hidden'));
+saveSettings.addEventListener('click', ()=>{
   const t = themeSwitcher.value;
   const l = languageSwitcher.value;
   localStorage.setItem('theme', t);
@@ -81,77 +76,45 @@ saveSettings.addEventListener('click', () => {
   settingsModal.classList.add('hidden');
 });
 
-// theme change by telegram event
-tg?.onEvent?.('themeChanged', () => { if (theme === 'auto') applyThemeMode('auto'); });
+// Telegram থিম চেঞ্জ
+tg?.onEvent?.('themeChanged', ()=> { 
+  if(theme === 'auto') applyThemeMode('auto'); 
+});
 
-// Navigation
-const handleNavigation = (target) => {
-  tabs.forEach(b => b.classList.remove('active'));
-  pages.forEach(p => p.classList.remove('active'));
-  const targetTab = document.querySelector(`.bottom-nav .tab[data-target="${target}"]`);
-  const targetPage = document.getElementById(target);
-  if (targetTab) targetTab.classList.add('active');
-  if (targetPage) targetPage.classList.add('active');
-};
-
-tabs.forEach(btn => {
-  btn.addEventListener('click', () => {
+// ন্যাভিগেশন
+tabs.forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    tabs.forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
     const target = btn.dataset.target;
-    handleNavigation(target);
+    pages.forEach(p=>p.classList.remove('active'));
+    document.getElementById(target).classList.add('active');
   });
 });
 
-document.querySelectorAll('.nav-link').forEach(a => {
-  a.addEventListener('click', (e) => {
-    e.preventDefault();
-    const target = a.dataset.target;
-    handleNavigation(target);
-  });
-});
-
-// Set initial active tab and page
-const initialActiveTab = document.querySelector('.bottom-nav .tab.active');
-if (initialActiveTab) {
-  const targetPageId = initialActiveTab.dataset.target;
-  const targetPage = document.getElementById(targetPageId);
-  if (targetPage) {
-    targetPage.classList.add('active');
+// Telegram থেকে ইউজারের ডেটা সেট করা
+function populateTelegram(){
+  if(TG_USER){
+    profilePic.src = TG_USER.photo_url || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+    displayName.textContent = TG_USER.first_name || TG_USER.username || 'User';
+    tgIdEl.textContent = UID;
+    pUsername.textContent = TG_USER.username || TG_USER.first_name || 'User';
+    pTgId.textContent = UID;
+    document.getElementById("pProfilePic").src = TG_USER.photo_url || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
   }
 }
+populateTelegram();
 
-// Function to handle profile UI updates
-const updateProfileUI = (userData) => {
-  if (TG_USER && TG_USER.first_name) {
-    displayName.textContent = `${TG_USER.first_name} ${TG_USER.last_name || ''}`;
-    tgIdEl.textContent = `@${TG_USER.username || ''}`;
-    const profilePicUrl = TG_USER.photo_url || null;
-    if (profilePicUrl) {
-      profilePic.src = profilePicUrl;
-    } else {
-      profilePic.src = "https://i.ibb.co/60qYh7x/placeholder.png";
-    }
-  } else if (auth.currentUser) {
-    displayName.textContent = auth.currentUser.uid;
-    tgIdEl.textContent = 'User ID';
-    profilePic.src = "https://i.ibb.co/60qYh7x/placeholder.png";
-  }
-  pointsHome.textContent = userData?.points || 0;
-  moneyHome.textContent = (userData?.points * COIN_TO_BDT).toFixed(2) || 0;
-  pPoints.textContent = userData?.points || 0;
-  pMoney.textContent = (userData?.points * COIN_TO_BDT).toFixed(2) || 0;
-  pUsername.textContent = displayName.textContent;
-  pTgId.textContent = tgIdEl.textContent;
-};
-
-// Firestore functions
-async function ensureUserDoc() {
-  if (!UID) return;
+// ইউজার ডকুমেন্ট তৈরি
+async function ensureUserDoc(){
+  if(!UID) return;
   const ref = doc(db, 'users', UID);
   const snap = await getDoc(ref);
-  if (!snap.exists()) {
+  if(!snap.exists()){
     await setDoc(ref, {
       telegramId: UID,
       username: TG_USER?.username || TG_USER?.first_name || 'User',
+      photo: TG_USER?.photo_url || '',
       points: 0,
       referrals: 0,
       referralPoints: 0,
@@ -160,70 +123,102 @@ async function ensureUserDoc() {
   }
 }
 
-// load user data from firestore
-async function loadUserData() {
-  if (!UID) return;
+// ইউজারের ডেটা লোড
+async function loadUserData(){
+  if(!UID) return;
   const ref = doc(db, 'users', UID);
-  try {
-    const snap = await getDoc(ref);
-    if (!snap.exists()) return;
-    userData = snap.data();
-    userData.points = userData.points || 0;
-    userData.referrals = userData.referrals || 0;
-    userData.referralPoints = userData.referralPoints || 0;
+  const snap = await getDoc(ref);
+  if(!snap.exists()) return;
 
-    pointsHome.textContent = String(userData.points);
-    pPoints.textContent = String(userData.points);
-    const money = (userData.points * COIN_TO_BDT).toFixed(2);
-    moneyHome.textContent = `৳${money}`;
-    pMoney.textContent = `৳${money}`;
-    document.getElementById('refCount').textContent = String(userData.referrals);
-    document.getElementById('refPoints').textContent = String(userData.referralPoints);
-    refLink.value = `https://t.me/gravity_ad_bot?start=${UID}`;
-    updateProfileUI(userData);
-  } catch (e) {
-    console.error("Error loading user data:", e);
-  }
+  userData = snap.data();
+  userData.points = userData.points || 0;
+  userData.referrals = userData.referrals || 0;
+  userData.referralPoints = userData.referralPoints || 0;
+
+  // UI আপডেট
+  pointsHome.textContent = String(userData.points);
+  pPoints.textContent = String(userData.points);
+  const money = (userData.points * COIN_TO_BDT).toFixed(2);
+  moneyHome.textContent = `৳${money}`;
+  pMoney.textContent = `৳${money}`;
+  document.getElementById('refCount').textContent = String(userData.referrals);
+  document.getElementById('refPoints').textContent = String(userData.referralPoints);
+  refLink.value = `https://t.me/gravity_ad_bot?start=${UID}`;
 }
 
-// Firebase auth & boot
-async function boot() {
-  const telegramData = initTelegram();
-  TG_USER = telegramData.telegramUser;
-  UID = telegramData.telegramId;
-
+// Firebase auth boot
+async function boot(){
   await signInAnonymously(auth).catch(console.error);
-  onAuthStateChanged(auth, async () => {
+  onAuthStateChanged(auth, async ()=>{
     await ensureUserDoc();
     await loadUserData();
   });
 }
 boot();
 
-// Initialize ads, tasks, and withdrawal logic
-watchAdBtn.addEventListener('click', () => {
-  if (!UID) return alert('Auth not ready');
-  showRewardedAd(async () => {
-    try {
-      await updateDoc(doc(db, 'users', UID), { points: increment(10) });
+// Watch Ads
+watchAdBtn.addEventListener('click', async ()=>{
+  if(!UID) return alert('Auth not ready');
+  try {
+    if(typeof window.show_9669121 === 'function'){
+      await window.show_9669121();
+      await updateDoc(doc(db,'users',UID), { points: increment(10) });
       await loadUserData();
-    } catch (e) {
-      console.error('Failed to update points:', e);
-      alert('Failed to update points.');
+      alert('You earned 10 coins!');
+    } else {
+      alert('Ad system not loaded');
     }
-  });
+  } catch (e){
+    try {
+      await window.show_9669121('pop');
+      await updateDoc(doc(db,'users',UID), { points: increment(10) });
+      await loadUserData();
+      alert('You earned 10 coins!');
+    } catch (err){
+      console.error(err);
+      alert('Ad failed to load');
+    }
+  }
 });
 
-setupTaskAndBonusListeners(db, UID, loadUserData);
-setupWithdrawForm(withdrawForm, totalPointsDisplay, UID);
-
-// Copy referral
-copyRef.addEventListener('click', async () => {
+// Referral copy
+copyRef.addEventListener('click', async ()=>{
   try {
     await navigator.clipboard.writeText(refLink.value);
     alert('Referral link copied!');
-  } catch (e) {
+  } catch (e){
     console.error(e);
     alert('Copy failed');
+  }
+});
+
+// Withdraw form
+withdrawForm.addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const method = document.getElementById('payMethod').value;
+  const accountId = document.getElementById('accountId').value.trim();
+  const amount = Number(document.getElementById('amount').value || 0);
+
+  if(!method || !accountId || amount <= 0) return alert('Fill fields correctly');
+  if(amount > (userData.points || 0)) return alert('Not enough coins');
+
+  const mins = { bkash:10000, nagad:10000, rocket:10000, binance:100000 };
+  const min = mins[method] || 10000;
+  if(amount < min) return alert(`Minimum ${min} coins for ${method}`);
+
+  try {
+    await updateDoc(doc(db,'users',UID), { points: increment(-amount) });
+    const wref = doc(db,'withdrawals', `${UID}_${Date.now()}`);
+    await setDoc(wref, {
+      telegramId: UID,
+      method, accountId, amount,
+      status: 'pending', createdAt: serverTimestamp()
+    });
+    await loadUserData();
+    alert('Withdrawal requested. We will process soon.');
+    withdrawForm.reset();
+  } catch (e) {
+    console.error(e);
+    alert('Withdraw failed');
   }
 });
