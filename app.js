@@ -105,7 +105,7 @@ function populateTelegram(){
 }
 populateTelegram();
 
-// ইউজার ডকুমেন্ট তৈরি
+// ইউজার ডকুমেন্ট তৈরি বা লোড
 async function ensureUserDoc(){
   if(!UID) return;
   const ref = doc(db, 'users', UID);
@@ -150,6 +150,9 @@ async function loadUserData(){
 async function boot(){
   await signInAnonymously(auth).catch(console.error);
   onAuthStateChanged(auth, async ()=>{
+    if (!UID && auth.currentUser?.uid) {
+      UID = auth.currentUser.uid; // fallback UID
+    }
     await ensureUserDoc();
     await loadUserData();
   });
