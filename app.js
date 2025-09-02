@@ -180,9 +180,10 @@ async function loadUserData(){
   refLink.value = `https://t.me/gravity_ad_bot?start=${UID}`;
   
   // Update new ad-related UI elements
-  adsWatchedTodayEl.textContent = String(userData.adsWatchedToday || 0);
-  totalAdsWatchedEl.textContent = String(userData.adsWatchedTotal || 0);
   adsWatchedCounter.textContent = String(userData.adsWatchedToday || 0);
+  if (totalAdsWatchedEl) { // Ensure totalAdsWatchedEl exists before updating
+      totalAdsWatchedEl.textContent = String(userData.adsWatchedTotal || 0);
+  }
 
   checkAdCooldown();
 }
@@ -190,17 +191,27 @@ async function loadUserData(){
 // ======================= Ad Cooldown Logic =======================
 function checkAdCooldown() {
   const now = Date.now();
-  const lastAdTime = userData.lastAdWatch?.toDate()?.getTime() || 0;
-  const cooldownEnd = lastAdTime + AD_COOLDOWN_MINUTES * 60 * 1000;
   
-  // Disable button and show timer if ad limit is reached AND cooldown is active
+  // Only check for cooldown if the daily limit has been reached
   if (userData.adsWatchedToday >= DAILY_AD_LIMIT) {
-    watchAdBtn.disabled = true;
-    updateCooldownTimer(cooldownEnd);
-    if (!adCooldownInterval) {
-      adCooldownInterval = setInterval(() => {
-        updateCooldownTimer(cooldownEnd);
-      }, 1000);
+    const lastAdTime = userData.lastAdWatch?.toDate()?.getTime() || 0;
+    const cooldownEnd = lastAdTime + AD_COOLDOWN_MINUTES * 60 * 1000;
+
+    if (cooldownEnd > now) {
+      watchAdBtn.disabled = true;
+      updateCooldownTimer(cooldownEnd);
+      if (!adCooldownInterval) {
+        adCooldownInterval = setInterval(() => {
+          updateCooldownTimer(cooldownEnd);
+        }, 1000);
+      }
+    } else {
+      watchAdBtn.disabled = false;
+      cooldownTimerEl.textContent = '';
+      if (adCooldownInterval) {
+        clearInterval(adCooldownInterval);
+        adCooldownInterval = null;
+      }
     }
   } else {
     // If ad limit is not reached, ensure button is enabled and timer is off
