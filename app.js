@@ -180,10 +180,8 @@ async function loadUserData(){
   refLink.value = `https://t.me/gravity_ad_bot?start=${UID}`;
   
   // Update new ad-related UI elements
+  adsWatchedTodayEl.textContent = String(userData.adsWatchedToday || 0);
   adsWatchedCounter.textContent = String(userData.adsWatchedToday || 0);
-  if (totalAdsWatchedEl) { // Ensure totalAdsWatchedEl exists before updating
-      totalAdsWatchedEl.textContent = String(userData.adsWatchedTotal || 0);
-  }
 
   checkAdCooldown();
 }
