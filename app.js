@@ -34,13 +34,23 @@ const pUsername = document.getElementById('pUsername');
 const pTgId = document.getElementById('pTgId');
 
 const watchAdBtn = document.getElementById('watchAdBtn');
+const adStatus = document.getElementById('adStatus');
+const adsWatchedTodayEl = document.getElementById('adsWatchedToday');
+const totalAdsWatchedEl = document.getElementById('totalAdsWatched');
+const adsWatchedCounter = document.getElementById('adsWatched');
+const cooldownTimerEl = document.getElementById('cooldownTimer');
+
 const refLink = document.getElementById('refLink');
 const copyRef = document.getElementById('copyRef');
 const withdrawForm = document.getElementById('withdrawForm');
 
 // ======================= Constants =======================
 const COIN_TO_BDT = 0.01;
-let userData = { points: 0, referrals: 0, referralPoints: 0 };
+const DAILY_AD_LIMIT = 10;
+const AD_COOLDOWN_MINUTES = 15;
+const AD_REWARD_COINS = 10;
+let userData = { points: 0, referrals: 0, referralPoints: 0, adsWatchedToday: 0, adsWatchedTotal: 0, lastAdWatch: null };
+let adCooldownInterval = null;
 let theme = localStorage.getItem('theme') || 'auto';
 let lang = localStorage.getItem('lang') || 'en';
 
@@ -114,6 +124,9 @@ async function ensureUserDoc(){
   }
   const ref = doc(db, 'users', UID);
   const snap = await getDoc(ref);
+  const today = new Date();
+  const resetDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 1, 0).getTime();
+
   if(!snap.exists()){
     console.log("🆕 Creating Firestore user document...");
     await setDoc(ref, {
@@ -123,11 +136,26 @@ async function ensureUserDoc(){
       points: 0,
       referrals: 0,
       referralPoints: 0,
+      adsWatchedToday: 0,
+      adsWatchedTotal: 0,
+      lastAdWatch: null,
+      lastResetDate: new Date(),
       createdAt: serverTimestamp()
     });
   } else {
-    console.log("✅ User document exists.");
-  }
+      console.log("✅ User document exists.");
+      const data = snap.data();
+      const lastReset = data.lastResetDate?.toDate();
+      
+      // Reset adsWatchedToday at 12:01 AM
+      if (lastReset && lastReset.getTime() < resetDate) {
+        await updateDoc(ref, {
+          adsWatchedToday: 0,
+          lastResetDate: serverTimestamp()
+        });
+        console.log("🔄 Daily ad count reset.");
+      }
+    }
 }
 
 // ======================= Load User Data =======================
@@ -150,6 +178,58 @@ async function loadUserData(){
   document.getElementById('refCount').textContent = String(userData.referrals);
   document.getElementById('refPoints').textContent = String(userData.referralPoints);
   refLink.value = `https://t.me/gravity_ad_bot?start=${UID}`;
+  
+  // Update new ad-related UI elements
+  adsWatchedTodayEl.textContent = String(userData.adsWatchedToday || 0);
+  totalAdsWatchedEl.textContent = String(userData.adsWatchedTotal || 0);
+  adsWatchedCounter.textContent = String(userData.adsWatchedToday || 0);
+
+  checkAdCooldown();
+}
+
+// ======================= Ad Cooldown Logic =======================
+function checkAdCooldown() {
+  const now = Date.now();
+  const lastAdTime = userData.lastAdWatch?.toDate()?.getTime() || 0;
+  const cooldownEnd = lastAdTime + AD_COOLDOWN_MINUTES * 60 * 1000;
+  
+  if (userData.adsWatchedToday >= DAILY_AD_LIMIT) {
+    watchAdBtn.disabled = true;
+    cooldownTimerEl.textContent = DICT[lang].ad_limit_reached;
+    return;
+  }
+  
+  if (cooldownEnd > now) {
+    watchAdBtn.disabled = true;
+    updateCooldownTimer(cooldownEnd);
+    if (!adCooldownInterval) {
+      adCooldownInterval = setInterval(() => {
+        updateCooldownTimer(cooldownEnd);
+      }, 1000);
+    }
+  } else {
+    watchAdBtn.disabled = false;
+    cooldownTimerEl.textContent = '';
+    if (adCooldownInterval) {
+      clearInterval(adCooldownInterval);
+      adCooldownInterval = null;
+    }
+  }
+}
+
+function updateCooldownTimer(cooldownEnd) {
+  const now = Date.now();
+  const remainingTime = cooldownEnd - now;
+  if (remainingTime <= 0) {
+    watchAdBtn.disabled = false;
+    cooldownTimerEl.textContent = '';
+    clearInterval(adCooldownInterval);
+    adCooldownInterval = null;
+    return;
+  }
+  const minutes = Math.floor(remainingTime / (60 * 1000));
+  const seconds = Math.floor((remainingTime % (60 * 1000)) / 1000);
+  cooldownTimerEl.textContent = `${DICT[lang].cooldown_timer} ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 }
 
 // ======================= Firebase Boot =======================
@@ -170,29 +250,55 @@ boot();
 watchAdBtn.addEventListener('click', async ()=>{
   if(!UID) {
     console.error("❌ UID missing. Cannot reward points.");
-    return alert('Authentication not ready. Please try again.');
+    return alert(DICT[lang].auth_error);
+  }
+  
+  if (watchAdBtn.disabled) {
+    return;
   }
 
-  console.log("🎬 Watch Ads clicked for UID:", UID);
+  const startTime = Date.now();
 
   try {
     if(typeof window.show_9669121 === 'function'){
       console.log("✅ Monetag SDK Loaded. Showing ad...");
       await window.show_9669121();
-
+      const watchTime = Date.now() - startTime;
+      
+      if (watchTime < 15000) {
+        alert(DICT[lang].ad_watch_too_short);
+        return;
+      }
+      
       console.log("🎯 Ad watched successfully. Updating Firestore...");
-      await updateDoc(doc(db,'users',UID), { points: increment(10) });
+      
+      const isLastAd = (userData.adsWatchedToday || 0) + 1 === DAILY_AD_LIMIT;
+      
+      await updateDoc(doc(db,'users',UID), { 
+        points: increment(AD_REWARD_COINS),
+        adsWatchedToday: increment(1),
+        adsWatchedTotal: increment(1),
+        lastAdWatch: serverTimestamp()
+      });
 
       console.log("✅ Firestore points updated!");
       await loadUserData();
-      alert('🎉 You earned 10 coins!');
+      alert(DICT[lang].ad_success);
+      
+      if (isLastAd) {
+        alert(DICT[lang].redirect_after_ads);
+        setTimeout(() => {
+          window.location.href = "YOUR_REDIRECT_LINK_HERE";
+        }, 3000);
+      }
+
     } else {
       console.warn("⚠️ Monetag SDK not loaded yet!");
-      alert('⚠️ Ad system not ready. Try again later.');
+      alert(DICT[lang].ad_not_ready);
     }
   } catch (err){
     console.error("❌ Ad failed:", err);
-    alert('⚠️ Ad failed to load. Try again later.');
+    alert(DICT[lang].ad_failed);
   }
 });
 
@@ -200,10 +306,10 @@ watchAdBtn.addEventListener('click', async ()=>{
 copyRef.addEventListener('click', async ()=>{
   try {
     await navigator.clipboard.writeText(refLink.value);
-    alert('Referral link copied!');
+    alert(DICT[lang].link_copied);
   } catch (e){
     console.error(e);
-    alert('Copy failed');
+    alert(DICT[lang].copy_failed);
   }
 });
 
@@ -214,12 +320,12 @@ withdrawForm.addEventListener('submit', async (e)=>{
   const accountId = document.getElementById('accountId').value.trim();
   const amount = Number(document.getElementById('amount').value || 0);
 
-  if(!method || !accountId || amount <= 0) return alert('Fill fields correctly');
-  if(amount > (userData.points || 0)) return alert('Not enough coins');
+  if(!method || !accountId || amount <= 0) return alert(DICT[lang].fill_form);
+  if(amount > (userData.points || 0)) return alert(DICT[lang].not_enough_coins);
 
   const mins = { bkash:10000, nagad:10000, rocket:10000, binance:100000 };
   const min = mins[method] || 10000;
-  if(amount < min) return alert(`Minimum ${min} coins for ${method}`);
+  if(amount < min) return alert(DICT[lang].min_withdraw.replace('{}', min).replace('[]', method));
 
   try {
     await updateDoc(doc(db,'users',UID), { points: increment(-amount) });
@@ -230,10 +336,10 @@ withdrawForm.addEventListener('submit', async (e)=>{
       status: 'pending', createdAt: serverTimestamp()
     });
     await loadUserData();
-    alert('Withdrawal requested. We will process soon.');
+    alert(DICT[lang].withdraw_success);
     withdrawForm.reset();
   } catch (e) {
     console.error(e);
-    alert('Withdraw failed');
+    alert(DICT[lang].withdraw_failed);
   }
 });
