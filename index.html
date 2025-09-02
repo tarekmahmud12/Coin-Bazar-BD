@@ -6,14 +6,11 @@
   <title>Coin Bazar</title>
   <link rel="stylesheet" href="style.css" />
 
-  <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-  <!-- Monetag SDK (your zone) -->
   <script src="//libtl.com/sdk.js" data-zone="9669121" data-sdk="show_9669121"></script>
 </head>
 <body>
-  <!-- App Bar -->
   <header class="appbar">
     <div class="brand">
       <svg class="brand-logo" viewBox="0 0 24 24" width="22" height="22" aria-hidden>
@@ -25,7 +22,6 @@
 
     <div class="app-actions">
       <button id="settingsBtn" class="icon-btn" title="Settings">
-        <!-- gear svg -->
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/>
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06A2 2 0 0 1 2.3 16.88l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82L4.3 2.3A2 2 0 0 1 7.13.47l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V0a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51c.58.19 1.14.56 1.51 1l.09.09a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.44.32.79.73 1.02 1.19z" />
@@ -34,19 +30,18 @@
     </div>
   </header>
 
-  <!-- Settings Modal -->
   <div id="settingsModal" class="modal hidden">
     <div class="modal-card glass">
       <h3 id="settingsTitle">Settings</h3>
 
-      <label class="label" for="themeSwitcher">Theme</label>
+      <label class="label" for="themeSwitcher" id="theme">Theme</label>
       <select id="themeSwitcher">
         <option value="auto">Auto</option>
         <option value="light">Light</option>
         <option value="dark">Dark</option>
       </select>
 
-      <label class="label" for="languageSwitcher">Language</label>
+      <label class="label" for="languageSwitcher" id="language">Language</label>
       <select id="languageSwitcher">
         <option value="en">English</option>
         <option value="bn">বাংলা</option>
@@ -60,7 +55,6 @@
   </div>
 
   <main class="container">
-    <!-- HOME -->
     <section id="page-home" class="page active">
       <div class="card glass hero-card">
         <img id="profilePic" class="avatar" src="https://i.pravatar.cc/200?img=1" alt="Profile" />
@@ -77,18 +71,32 @@
             <span id="moneyHome" class="stat-value">৳0.00</span>
           </div>
         </div>
+        
+        <div class="stats" style="margin-top:10px;">
+          <div class="stat">
+            <span class="stat-label" data-i18n="ads_today">আজকের দেখা এডস</span>
+            <span id="adsWatchedToday" class="stat-value">0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label" data-i18n="ads_total">মোট দেখা এডস</span>
+            <span id="totalAdsWatched" class="stat-value">0</span>
+          </div>
+        </div>
 
         <div class="hero-actions">
           <button id="watchAdBtn" class="btn btn-primary btn-lg">
             <svg class="btn-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
             <span id="watchAdText">Watch Ad & Earn 10 Coins</span>
           </button>
-          <a id="tasksQuick" class="btn btn-ghost nav-link" data-target="page-tasks">Go to Tasks</a>
+
+          <div id="adStatus" style="margin-top:10px;text-align:center;">
+            <p><strong>Ads Watched Today:</strong> <span id="adsWatched">0</span> / 10</p>
+            <p id="cooldownTimer" style="color:#ff4444;font-weight:bold;"></p>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- TASKS -->
     <section id="page-tasks" class="page">
       <div class="card glass">
         <h3 id="tasksTitle">Tasks</h3>
@@ -114,13 +122,12 @@
       </div>
     </section>
 
-    <!-- REFER -->
     <section id="page-refer" class="page">
       <div class="card glass">
         <h3 id="referTitle">Refer & Earn</h3>
         <p class="muted" id="referDesc">Invite friends to earn.</p>
 
-        <label class="label">Your referral link</label>
+        <label class="label" id="refLinkLabel">Your referral link</label>
         <div class="input-group">
           <input id="refLink" readonly />
           <button id="copyRef" class="btn btn-ghost">Copy</button>
@@ -128,23 +135,21 @@
 
         <div class="grid-2">
           <div class="stat-tile">
-            <span class="stat-label">Referrals</span>
+            <span class="stat-label" id="referralsLabel">Referrals</span>
             <div id="refCount" class="stat-value">0</div>
           </div>
           <div class="stat-tile">
-            <span class="stat-label">Referral Points</span>
+            <span class="stat-label" id="refPointsLabel">Referral Points</span>
             <div id="refPoints" class="stat-value">0</div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- BONUS -->
     <section id="page-bonus" class="page">
       <div class="card glass">
         <h3 id="bonusTitle">Bonus</h3>
         <div class="bonus-list" id="bonusList">
-          <!-- items injected or static -->
           <div class="bonus-item">
             <div>
               <div class="bonus-title">Subscribe Channel</div>
@@ -156,7 +161,6 @@
       </div>
     </section>
 
-    <!-- PROFILE (WITHDRAW) -->
     <section id="page-profile" class="page">
       <div class="card glass">
         <img id="pProfilePic" class="avatar" src="https://i.pravatar.cc/200?img=2" alt="Profile" />
@@ -176,7 +180,7 @@
 
         <h4 id="withdrawTitle">Withdraw</h4>
         <form id="withdrawForm" class="form">
-          <label class="label">Payment Method</label>
+          <label class="label" id="payMethodLabel">Payment Method</label>
           <select id="payMethod" required>
             <option value="">Select</option>
             <option value="bkash">Bkash</option>
@@ -185,50 +189,48 @@
             <option value="binance">Binance</option>
           </select>
 
-          <label class="label">Account ID</label>
+          <label class="label" id="accountIdLabel">Account ID</label>
           <input id="accountId" placeholder="Enter account ID" required />
 
-          <label class="label">Amount (coins)</label>
+          <label class="label" id="amountLabel">Amount (coins)</label>
           <input id="amount" type="number" min="1" placeholder="Enter coins" required />
 
           <div class="form-actions">
-            <button class="btn btn-ghost" type="reset">Reset</button>
-            <button class="btn btn-primary" type="submit">Withdraw</button>
+            <button class="btn btn-ghost" type="reset" data-i18n="reset">Reset</button>
+            <button class="btn btn-primary" type="submit" data-i18n="withdraw_btn">Withdraw</button>
           </div>
         </form>
       </div>
     </section>
   </main>
 
-  <!-- Bottom Navigation (professional icons - no emoji) -->
   <nav class="bottom-nav">
     <button class="tab active" data-target="page-home" aria-label="Home">
       <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M3 11.5L12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-8.5z"/></svg>
-      <span>Home</span>
+      <span data-i18n="nav_home">Home</span>
     </button>
 
     <button class="tab" data-target="page-tasks" aria-label="Tasks">
       <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M9 11H7v2h2v-2zm0-4H7v2h2V7zm0 8H7v2h2v-2zM13 7h6v2h-6zm0 4h6v2h-6zM3 5h18v14H3z"/></svg>
-      <span>Tasks</span>
+      <span data-i18n="nav_tasks">Tasks</span>
     </button>
 
     <button class="tab" data-target="page-refer" aria-label="Refer">
       <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z"/></svg>
-      <span>Refer</span>
+      <span data-i18n="nav_refer">Refer</span>
     </button>
 
     <button class="tab" data-target="page-bonus" aria-label="Bonus">
       <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 2l2.6 5.3L20 8.1l-4 3.6L17 18l-5-2.6L7 18l1-6.3L4 8.1l5.4-.8L12 2z"/></svg>
-      <span>Bonus</span>
+      <span data-i18n="nav_bonus">Bonus</span>
     </button>
 
     <button class="tab" data-target="page-profile" aria-label="Profile">
       <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v1h20v-1c0-3.3-6.7-5-10-5z"/></svg>
-      <span>Profile</span>
+      <span data-i18n="nav_profile">Profile</span>
     </button>
   </nav>
 
-  <!-- language dictionary + app -->
   <script type="module" src="lang.js"></script>
   <script type="module" src="app.js"></script>
 </body>
