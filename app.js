@@ -191,6 +191,7 @@ async function loadUserData(){
 function checkAdCooldown() {
   const now = Date.now();
   
+  // Only check for cooldown if the daily limit has been reached
   if (userData.adsWatchedToday >= DAILY_AD_LIMIT) {
     const lastAdTime = userData.lastAdWatch?.toDate()?.getTime() || 0;
     const cooldownEnd = lastAdTime + AD_COOLDOWN_MINUTES * 60 * 1000;
@@ -212,6 +213,7 @@ function checkAdCooldown() {
       }
     }
   } else {
+    // If ad limit is not reached, ensure button is enabled and timer is off
     watchAdBtn.disabled = false;
     cooldownTimerEl.textContent = '';
     if (adCooldownInterval) {
