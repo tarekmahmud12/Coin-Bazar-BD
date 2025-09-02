@@ -139,7 +139,7 @@ async function ensureUserDoc(){
       adsWatchedToday: 0,
       adsWatchedTotal: 0,
       lastAdWatch: null,
-      lastResetDate: new Date(),
+      lastResetDate: serverTimestamp(),
       createdAt: serverTimestamp()
     });
   } else {
@@ -193,13 +193,8 @@ function checkAdCooldown() {
   const lastAdTime = userData.lastAdWatch?.toDate()?.getTime() || 0;
   const cooldownEnd = lastAdTime + AD_COOLDOWN_MINUTES * 60 * 1000;
   
+  // Disable button and show timer if ad limit is reached AND cooldown is active
   if (userData.adsWatchedToday >= DAILY_AD_LIMIT) {
-    watchAdBtn.disabled = true;
-    cooldownTimerEl.textContent = DICT[lang].ad_limit_reached;
-    return;
-  }
-  
-  if (cooldownEnd > now) {
     watchAdBtn.disabled = true;
     updateCooldownTimer(cooldownEnd);
     if (!adCooldownInterval) {
@@ -208,6 +203,7 @@ function checkAdCooldown() {
       }, 1000);
     }
   } else {
+    // If ad limit is not reached, ensure button is enabled and timer is off
     watchAdBtn.disabled = false;
     cooldownTimerEl.textContent = '';
     if (adCooldownInterval) {
@@ -229,7 +225,7 @@ function updateCooldownTimer(cooldownEnd) {
   }
   const minutes = Math.floor(remainingTime / (60 * 1000));
   const seconds = Math.floor((remainingTime % (60 * 1000)) / 1000);
-  cooldownTimerEl.textContent = `${DICT[lang].cooldown_timer} ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+  cooldownTimerEl.textContent = `${DICT[lang].cooldown_timer || 'Cooldown'}: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 }
 
 // ======================= Firebase Boot =======================
@@ -272,7 +268,8 @@ watchAdBtn.addEventListener('click', async ()=>{
       
       console.log("🎯 Ad watched successfully. Updating Firestore...");
       
-      const isLastAd = (userData.adsWatchedToday || 0) + 1 === DAILY_AD_LIMIT;
+      const updatedAdsWatched = (userData.adsWatchedToday || 0) + 1;
+      const isLastAd = updatedAdsWatched === DAILY_AD_LIMIT;
       
       await updateDoc(doc(db,'users',UID), { 
         points: increment(AD_REWARD_COINS),
@@ -286,8 +283,10 @@ watchAdBtn.addEventListener('click', async ()=>{
       alert(DICT[lang].ad_success);
       
       if (isLastAd) {
+        checkAdCooldown(); // Start cooldown timer after 10th ad
         alert(DICT[lang].redirect_after_ads);
         setTimeout(() => {
+          // You need to replace this with your actual ad link
           window.location.href = "YOUR_REDIRECT_LINK_HERE";
         }, 3000);
       }
