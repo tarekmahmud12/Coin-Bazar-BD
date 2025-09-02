@@ -36,7 +36,6 @@ const pTgId = document.getElementById('pTgId');
 const watchAdBtn = document.getElementById('watchAdBtn');
 const adStatus = document.getElementById('adStatus');
 const adsWatchedTodayEl = document.getElementById('adsWatchedToday');
-const totalAdsWatchedEl = document.getElementById('totalAdsWatched');
 const adsWatchedCounter = document.getElementById('adsWatched');
 const cooldownTimerEl = document.getElementById('cooldownTimer');
 
