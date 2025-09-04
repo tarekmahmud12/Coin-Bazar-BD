@@ -3,6 +3,7 @@ import {
   doc, setDoc, getDoc, updateDoc, increment, serverTimestamp
 } from "./firebase.js";
 import { DICT, applyLanguage } from "./lang.js";
+import { setupTaskAndBonusListeners } from "./tasks.js";
 
 // ======================= Telegram User Setup =======================
 const tg = window.Telegram?.WebApp;
@@ -246,6 +247,7 @@ async function boot(){
     }
     await ensureUserDoc();
     await loadUserData();
+    setupTaskAndBonusListeners(db, UID, loadUserData);
   });
 }
 boot();
