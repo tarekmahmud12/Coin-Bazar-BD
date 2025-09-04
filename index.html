@@ -34,14 +34,14 @@
     <div class="modal-card glass">
       <h3 id="settingsTitle">Settings</h3>
 
-      <label class="label" for="themeSwitcher" id="theme">Theme</label>
+      <label class="label" for="themeSwitcher">Theme</label>
       <select id="themeSwitcher">
         <option value="auto">Auto</option>
         <option value="light">Light</option>
         <option value="dark">Dark</option>
       </select>
 
-      <label class="label" for="languageSwitcher" id="language">Language</label>
+      <label class="label" for="languageSwitcher">Language</label>
       <select id="languageSwitcher">
         <option value="en">English</option>
         <option value="bn">বাংলা</option>
@@ -61,7 +61,7 @@
         <h2 id="displayName">User</h2>
         <p class="muted">Telegram ID: <span id="tgId">—</span></p>
 
-        <div class="stats stats-row">
+        <div class="stats">
           <div class="stat">
             <span class="stat-label" id="coinsLabel">Coins</span>
             <span id="pointsHome" class="stat-value">0</span>
@@ -70,18 +70,25 @@
             <span class="stat-label" id="moneyLabel">Equivalent</span>
             <span id="moneyHome" class="stat-value">৳0.00</span>
           </div>
+        </div>
+
+        <div class="stats" style="margin-top:10px;">
           <div class="stat">
-            <span class="stat-label" data-i18n="ads_today">Ads Today</span>
+            <span class="stat-label">আজকের দেখা এডস</span>
             <span id="adsWatchedToday" class="stat-value">0</span>
           </div>
+          <div class="stat">
+            <span class="stat-label">মোট দেখা এডস</span>
+            <span id="totalAdsWatched" class="stat-value">0</span>
+          </div>
         </div>
-        
+
         <div class="hero-actions">
           <button id="watchAdBtn" class="btn btn-primary btn-lg">
             <svg class="btn-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
             <span id="watchAdText">Watch Ad & Earn 10 Coins</span>
           </button>
-
+          
           <div id="adStatus" style="margin-top:10px;text-align:center;">
             <p><strong>Ads Watched Today:</strong> <span id="adsWatched">0</span> / 10</p>
             <p id="cooldownTimer" style="color:#ff4444;font-weight:bold;"></p>
@@ -96,20 +103,28 @@
         <p class="muted" id="tasksDesc">Complete tasks and earn coins.</p>
 
         <div id="tasksList" class="list">
-          <div class="task-item">
+          <div class="task-item" data-task-id="task-1">
             <div>
               <div class="task-title" data-i18n="task1_title">Watch full video</div>
               <div class="muted" data-i18n="task1_desc">Stay on the page 15s</div>
             </div>
-            <button class="btn btn-primary task-btn" data-points="15" data-url="https://www.youtube.com/watch?v=8P9c4NfMWH8">Do</button>
+            <button class="btn btn-primary task-btn" data-points="10" data-duration="15" data-url="https://www.facebook.com/share/r/16ygQ3Gb2a/">Do</button>
           </div>
 
-          <div class="task-item">
+          <div class="task-item" data-task-id="task-2">
             <div>
               <div class="task-title" data-i18n="task2_title">Like video</div>
               <div class="muted" data-i18n="task2_desc">Open link and like</div>
             </div>
-            <button class="btn btn-primary task-btn" data-points="5" data-url="https://youtube.com/shorts/Kdi0PLG-jrI">Do</button>
+            <button class="btn btn-primary task-btn" data-points="5" data-duration="5" data-url="https://youtube.com/shorts/Kdi0PLG-jrI?si=f3I7US6b9RysbuEk">Do</button>
+          </div>
+
+          <div class="task-item" data-task-id="task-3">
+            <div>
+              <div class="task-title" data-i18n="task3_title">Watch ads</div>
+              <div class="muted" data-i18n="task3_desc">Stay on the page 20s</div>
+            </div>
+            <button class="btn btn-primary task-btn" data-points="10" data-duration="20" data-url="https://www.profitableratecpm.com/yh7pvdve?key=58d4a9b60d7d99d8d92682690909edc3">Do</button>
           </div>
         </div>
       </div>
@@ -120,7 +135,7 @@
         <h3 id="referTitle">Refer & Earn</h3>
         <p class="muted" id="referDesc">Invite friends to earn.</p>
 
-        <label class="label" id="refLinkLabel">Your referral link</label>
+        <label class="label">Your referral link</label>
         <div class="input-group">
           <input id="refLink" readonly />
           <button id="copyRef" class="btn btn-ghost">Copy</button>
@@ -128,11 +143,11 @@
 
         <div class="grid-2">
           <div class="stat-tile">
-            <span class="stat-label" id="referralsLabel">Referrals</span>
+            <span class="stat-label">Referrals</span>
             <div id="refCount" class="stat-value">0</div>
           </div>
           <div class="stat-tile">
-            <span class="stat-label" id="refPointsLabel">Referral Points</span>
+            <span class="stat-label">Referral Points</span>
             <div id="refPoints" class="stat-value">0</div>
           </div>
         </div>
@@ -173,7 +188,7 @@
 
         <h4 id="withdrawTitle">Withdraw</h4>
         <form id="withdrawForm" class="form">
-          <label class="label" id="payMethodLabel">Payment Method</label>
+          <label class="label">Payment Method</label>
           <select id="payMethod" required>
             <option value="">Select</option>
             <option value="bkash">Bkash</option>
@@ -182,15 +197,15 @@
             <option value="binance">Binance</option>
           </select>
 
-          <label class="label" id="accountIdLabel">Account ID</label>
+          <label class="label">Account ID</label>
           <input id="accountId" placeholder="Enter account ID" required />
 
-          <label class="label" id="amountLabel">Amount (coins)</label>
+          <label class="label">Amount (coins)</label>
           <input id="amount" type="number" min="1" placeholder="Enter coins" required />
 
           <div class="form-actions">
-            <button class="btn btn-ghost" type="reset" data-i18n="reset">Reset</button>
-            <button class="btn btn-primary" type="submit" data-i18n="withdraw_btn">Withdraw</button>
+            <button class="btn btn-ghost" type="reset">Reset</button>
+            <button class="btn btn-primary" type="submit">Withdraw</button>
           </div>
         </form>
       </div>
@@ -200,31 +215,32 @@
   <nav class="bottom-nav">
     <button class="tab active" data-target="page-home" aria-label="Home">
       <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M3 11.5L12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-8.5z"/></svg>
-      <span data-i18n="nav_home">Home</span>
+      <span>Home</span>
     </button>
 
     <button class="tab" data-target="page-tasks" aria-label="Tasks">
       <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M9 11H7v2h2v-2zm0-4H7v2h2V7zm0 8H7v2h2v-2zM13 7h6v2h-6zm0 4h6v2h-6zM3 5h18v14H3z"/></svg>
-      <span data-i18n="nav_tasks">Tasks</span>
+      <span>Tasks</span>
     </button>
 
     <button class="tab" data-target="page-refer" aria-label="Refer">
       <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z"/></svg>
-      <span data-i18n="nav_refer">Refer</span>
+      <span>Refer</span>
     </button>
 
     <button class="tab" data-target="page-bonus" aria-label="Bonus">
       <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 2l2.6 5.3L20 8.1l-4 3.6L17 18l-5-2.6L7 18l1-6.3L4 8.1l5.4-.8L12 2z"/></svg>
-      <span data-i18n="nav_bonus">Bonus</span>
+      <span>Bonus</span>
     </button>
 
     <button class="tab" data-target="page-profile" aria-label="Profile">
       <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v1h20v-1c0-3.3-6.7-5-10-5z"/></svg>
-      <span data-i18n="nav_profile">Profile</span>
+      <span>Profile</span>
     </button>
   </nav>
 
   <script type="module" src="lang.js"></script>
   <script type="module" src="app.js"></script>
+  <script type="module" src="tasks.js"></script>
 </body>
 </html>
