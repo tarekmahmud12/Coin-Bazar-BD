@@ -24,8 +24,8 @@ export const DICT = {
     nav_refer: "Refer",
     nav_bonus: "Bonus",
     nav_profile: "Profile",
-    ads_today: "Ads Today",
-    ads_total: "Total Ads",
+    ads_today: "Today's Ads",
+    ads_total: "Total Ads Watched",
     cooldown_timer: "Cooldown",
     auth_error: "Authentication not ready. Please try again.",
     ad_watch_too_short: "You must watch the ad for at least 15 seconds.",
@@ -43,7 +43,14 @@ export const DICT = {
     task1_title: "Watch full video",
     task1_desc: "Stay on the page 15s",
     task2_title: "Like the short",
-    task2_desc: "Open and like the short"
+    task2_desc: "Open and like the short",
+    task3_title: "Watch ads",
+    task3_desc: "Stay on the page 20s",
+    task_claimed: "Task claimed successfully!",
+    task_cooldown: "This task is on cooldown.",
+    task_unavailable: "This task is no longer available.",
+    task_not_found: "Task not found.",
+    task_rewarded: "Task completed. You earned {} coins!"
   },
   bn: {
     appTitle: "Gravity Ad",
@@ -58,7 +65,7 @@ export const DICT = {
     tasksTitle: "টাস্ক",
     tasksDesc: "টাস্ক সম্পন্ন করে কয়েন অর্জন করুন।",
     referTitle: "রেফার ও উপার্জন",
-    referDesc: "দোস্তদের আমন্ত্রণ করুন এবং উপার্জন করুন।",
+    referDesc: "বন্ধুদের আমন্ত্রণ করুন এবং উপার্জন করুন।",
     bonusTitle: "বোনাস",
     profileTitle: "আপনার প্রোফাইল",
     withdrawTitle: "উইথড্র",
@@ -88,7 +95,14 @@ export const DICT = {
     task1_title: "সম্পূর্ণ ভিডিও দেখুন",
     task1_desc: "কমপক্ষে ১৫ সেকেন্ড থাকুন",
     task2_title: "ভিডিওতে লাইক দিন",
-    task2_desc: "লিংক খুলে লাইক দিন"
+    task2_desc: "লিংক খুলে লাইক দিন",
+    task3_title: "বিজ্ঞাপন দেখুন",
+    task3_desc: "পেজে ২০ সেকেন্ড থাকুন",
+    task_claimed: "টাস্ক সফলভাবে সম্পন্ন হয়েছে!",
+    task_cooldown: "এই টাস্কটি কুলডাউনে আছে।",
+    task_unavailable: "এই টাস্কটি এখন আর পাওয়া যাচ্ছে না।",
+    task_not_found: "টাস্কটি খুঁজে পাওয়া যায়নি।",
+    task_rewarded: "টাস্ক সম্পন্ন হয়েছে। আপনি {} কয়েন পেয়েছেন!"
   }
 };
 
@@ -118,10 +132,19 @@ export function applyLanguage(lang){
   document.getElementById('withdrawTitle').textContent = dict.withdrawTitle;
   document.getElementById('totalCoinsLabel').textContent = dict.totalCoins;
   document.getElementById('totalMoneyLabel').textContent = dict.totalMoney;
-  document.getElementById('refLinkLabel').textContent = dict.referralLink;
-  document.getElementById('payMethodLabel').textContent = dict.payMethod;
-  document.getElementById('accountIdLabel').textContent = dict.accountId;
-  document.getElementById('amountLabel').textContent = dict.amount;
-  document.getElementById('copyRef').textContent = dict.copy;
+  
+  // New specific IDs from latest index.html
+  const adsTodayLabel = document.getElementById('adsWatchedTodayLabel');
+  if (adsTodayLabel) {
+      adsTodayLabel.textContent = dict.ads_today;
+  }
+  const totalAdsWatchedLabel = document.getElementById('totalAdsWatchedLabel');
+  if (totalAdsWatchedLabel) {
+      totalAdsWatchedLabel.textContent = dict.ads_total;
+  }
+  
+  // Check for the existence of elements before trying to set their text
+  const copyBtn = document.getElementById('copyRef');
+  if (copyBtn) copyBtn.textContent = dict.copy;
 
-    }
+}
