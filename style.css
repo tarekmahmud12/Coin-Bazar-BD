@@ -67,7 +67,6 @@ body.light{
 .btn-ghost{background:transparent;border:1px solid var(--stroke);color:var(--fg);padding:10px 12px}
 .btn-lg{padding:14px 18px;font-size:1rem;width:100%}
 .btn-icon{width:18px;height:18px;display:inline-block}
-.btn[disabled]{opacity:0.5;cursor:not-allowed;}
 
 /* ===== Tasks/List ===== */
 .list{display:flex;flex-direction:column;gap:10px}

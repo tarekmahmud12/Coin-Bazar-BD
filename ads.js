@@ -17,4 +17,3 @@ export const showRewardedAd = async (pointsCallback) => {
       alert("Ad failed to load.");
     }
   }
-};
