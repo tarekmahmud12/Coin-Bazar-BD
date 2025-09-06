@@ -47,9 +47,9 @@ const withdrawForm = document.getElementById('withdrawForm');
 // ======================= Constants =======================
 const COIN_TO_BDT = 0.01;
 const DAILY_AD_LIMIT = 10;
-const AD_COOLDOWN_MINUTES = 15;
+const AD_COOLDOWN_MINUTES = 30; // UPDATED to 30 minutes
 const AD_REWARD_COINS = 10;
-let userData = { points: 0, referrals: 0, referralPoints: 0, adsWatchedToday: 0, adsWatchedTotal: 0, lastAdWatch: null };
+let userData = { points: 0, referrals: 0, referralPoints: 0, adsWatchedToday: 0, adsWatchedTotal: 0, lastAdWatch: null, lastResetDate: null };
 let adCooldownInterval = null;
 let theme = localStorage.getItem('theme') || 'auto';
 let lang = localStorage.getItem('lang') || 'en';
@@ -124,8 +124,9 @@ async function ensureUserDoc(){
   }
   const ref = doc(db, 'users', UID);
   const snap = await getDoc(ref);
+  
   const today = new Date();
-  const resetDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 1, 0).getTime();
+  today.setHours(0, 0, 0, 0); // Set to midnight of the current day
 
   if(!snap.exists()){
     console.log("🆕 Creating Firestore user document...");
@@ -145,15 +146,17 @@ async function ensureUserDoc(){
   } else {
       console.log("✅ User document exists.");
       const data = snap.data();
-      const lastReset = data.lastResetDate?.toDate();
+      userData = data; // Load existing data
+      const lastResetDate = data.lastResetDate?.toDate();
       
-      // Reset adsWatchedToday at 12:01 AM
-      if (lastReset && lastReset.getTime() < resetDate) {
+      // Check if lastResetDate is before today's midnight
+      if (lastResetDate && lastResetDate < today) {
         await updateDoc(ref, {
           adsWatchedToday: 0,
           lastResetDate: serverTimestamp()
         });
         console.log("🔄 Daily ad count reset.");
+        userData.adsWatchedToday = 0; // Update local state immediately
       }
     }
 }
@@ -182,38 +185,36 @@ async function loadUserData(){
   // Update new ad-related UI elements
   adsWatchedTodayEl.textContent = String(userData.adsWatchedToday || 0);
   adsWatchedCounter.textContent = String(userData.adsWatchedToday || 0);
-
-  checkAdCooldown();
+  
+  // Check ad cooldown only if ad limit is reached
+  if (userData.adsWatchedToday >= DAILY_AD_LIMIT) {
+    checkAdCooldown();
+  } else {
+    watchAdBtn.disabled = false;
+    cooldownTimerEl.classList.add('hidden');
+    if (adCooldownInterval) {
+      clearInterval(adCooldownInterval);
+      adCooldownInterval = null;
+    }
+  }
 }
 
 // ======================= Ad Cooldown Logic =======================
 function checkAdCooldown() {
   const now = Date.now();
+  const lastAdTime = userData.lastAdWatch?.toDate()?.getTime() || 0;
+  const cooldownEnd = lastAdTime + AD_COOLDOWN_MINUTES * 60 * 1000;
   
-  // Check if daily ad limit is reached
-  if (userData.adsWatchedToday >= DAILY_AD_LIMIT) {
-    const lastAdTime = userData.lastAdWatch?.toDate()?.getTime() || 0;
-    const cooldownEnd = lastAdTime + AD_COOLDOWN_MINUTES * 60 * 1000;
-    
-    if (cooldownEnd > now) {
-      watchAdBtn.disabled = true;
-      cooldownTimerEl.classList.remove('hidden');
-      updateCooldownTimer(cooldownEnd);
-      if (!adCooldownInterval) {
-        adCooldownInterval = setInterval(() => {
-          updateCooldownTimer(cooldownEnd);
-        }, 1000);
-      }
-    } else {
-      watchAdBtn.disabled = false;
-      cooldownTimerEl.classList.add('hidden');
-      if (adCooldownInterval) {
-        clearInterval(adCooldownInterval);
-        adCooldownInterval = null;
-      }
+  if (cooldownEnd > now) {
+    watchAdBtn.disabled = true;
+    cooldownTimerEl.classList.remove('hidden');
+    updateCooldownTimer(cooldownEnd);
+    if (!adCooldownInterval) {
+      adCooldownInterval = setInterval(() => {
+        updateCooldownTimer(cooldownEnd);
+      }, 1000);
     }
   } else {
-    // If ad limit is not reached, ensure button is enabled and timer is off
     watchAdBtn.disabled = false;
     cooldownTimerEl.classList.add('hidden');
     if (adCooldownInterval) {
@@ -244,7 +245,7 @@ async function boot(){
   await signInAnonymously(auth).catch(console.error);
   onAuthStateChanged(auth, async ()=>{
     if (!UID && auth.currentUser?.uid) {
-      UID = auth.currentUser.uid; // fallback UID
+      UID = auth.currentUser.uid;
     }
     await ensureUserDoc();
     await loadUserData();
@@ -294,7 +295,7 @@ watchAdBtn.addEventListener('click', async ()=>{
       alert(DICT[lang].ad_success);
       
       if (isLastAd) {
-        checkAdCooldown(); // Start cooldown timer after 10th ad
+        checkAdCooldown();
         alert(DICT[lang].redirect_after_ads);
         setTimeout(() => {
           window.location.href = "YOUR_REDIRECT_LINK_HERE";
