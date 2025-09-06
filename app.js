@@ -9,10 +9,10 @@ import { setupTaskAndBonusListeners } from "./tasks.js";
 const tg = window.Telegram?.WebApp;
 tg?.expand();
 let TG_USER = tg?.initDataUnsafe?.user || null;
-let UID = TG_USER ? String(TG_USER.id) : null;
+// Firebase UID ব্যবহার করার জন্য, TG_USER ID সরাসরি ব্যবহার করা যাবে না
+let FIREBASE_UID = null;
 
 console.log("🔹 Telegram User:", TG_USER);
-console.log("🔹 Telegram UID:", UID);
 
 // ======================= DOM Elements =======================
 const tabs = document.querySelectorAll('.bottom-nav .tab');
@@ -47,7 +47,7 @@ const withdrawForm = document.getElementById('withdrawForm');
 // ======================= Constants =======================
 const COIN_TO_BDT = 0.01;
 const DAILY_AD_LIMIT = 10;
-const AD_COOLDOWN_MINUTES = 30; // UPDATED to 30 minutes
+const AD_COOLDOWN_MINUTES = 30;
 const AD_REWARD_COINS = 10;
 let userData = { points: 0, referrals: 0, referralPoints: 0, adsWatchedToday: 0, adsWatchedTotal: 0, lastAdWatch: null, lastResetDate: null };
 let adCooldownInterval = null;
@@ -55,8 +55,8 @@ let theme = localStorage.getItem('theme') || 'auto';
 let lang = localStorage.getItem('lang') || 'en';
 
 // ======================= Theme =======================
-function applyThemeMode(mode){
-  if(mode === 'auto') {
+function applyThemeMode(mode) {
+  if (mode === 'auto') {
     const scheme = tg?.colorScheme || 'dark';
     document.body.classList.toggle('light', scheme === 'light');
   } else {
@@ -67,7 +67,7 @@ function applyThemeMode(mode){
 applyThemeMode(theme);
 
 // ======================= Language =======================
-function applyLang(l){
+function applyLang(l) {
   lang = l;
   localStorage.setItem('lang', l);
   applyLanguage(l);
@@ -76,9 +76,9 @@ function applyLang(l){
 applyLang(lang);
 
 // ======================= Settings =======================
-settingsBtn.addEventListener('click', ()=> settingsModal.classList.remove('hidden'));
-closeSettings.addEventListener('click', ()=> settingsModal.classList.add('hidden'));
-saveSettings.addEventListener('click', ()=>{
+settingsBtn.addEventListener('click', () => settingsModal.classList.remove('hidden'));
+closeSettings.addEventListener('click', () => settingsModal.classList.add('hidden'));
+saveSettings.addEventListener('click', () => {
   const t = themeSwitcher.value;
   const l = languageSwitcher.value;
   localStorage.setItem('theme', t);
@@ -88,50 +88,50 @@ saveSettings.addEventListener('click', ()=>{
 });
 
 // ======================= Telegram Theme Event =======================
-tg?.onEvent?.('themeChanged', ()=> { 
-  if(theme === 'auto') applyThemeMode('auto'); 
+tg?.onEvent?.('themeChanged', () => {
+  if (theme === 'auto') applyThemeMode('auto');
 });
 
 // ======================= Navigation =======================
-tabs.forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    tabs.forEach(b=>b.classList.remove('active'));
+tabs.forEach(btn => {
+  btn.addEventListener('click', () => {
+    tabs.forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     const target = btn.dataset.target;
-    pages.forEach(p=>p.classList.remove('active'));
+    pages.forEach(p => p.classList.remove('active'));
     document.getElementById(target).classList.add('active');
   });
 });
 
 // ======================= Populate Telegram User =======================
-function populateTelegram(){
-  if(TG_USER){
+function populateTelegram() {
+  if (TG_USER) {
     profilePic.src = TG_USER.photo_url || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
     displayName.textContent = TG_USER.first_name || TG_USER.username || 'User';
-    tgIdEl.textContent = UID;
+    tgIdEl.textContent = TG_USER.id;
     pUsername.textContent = TG_USER.username || TG_USER.first_name || 'User';
-    pTgId.textContent = UID;
+    pTgId.textContent = TG_USER.id;
     document.getElementById("pProfilePic").src = TG_USER.photo_url || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
   }
 }
 populateTelegram();
 
 // ======================= Ensure User Document =======================
-async function ensureUserDoc(){
-  if(!UID) {
-    console.warn("⚠️ No Telegram UID found!");
+async function ensureUserDoc() {
+  if (!FIREBASE_UID) {
+    console.warn("⚠️ No Firebase UID found!");
     return;
   }
-  const ref = doc(db, 'users', UID);
+  const ref = doc(db, 'users', FIREBASE_UID);
   const snap = await getDoc(ref);
-  
   const today = new Date();
-  today.setHours(0, 0, 0, 0); // Set to midnight of the current day
+  today.setHours(0, 0, 0, 0);
 
-  if(!snap.exists()){
+  if (!snap.exists()) {
     console.log("🆕 Creating Firestore user document...");
     await setDoc(ref, {
-      telegramId: UID,
+      firebaseUID: FIREBASE_UID,
+      telegramId: TG_USER ? String(TG_USER.id) : null,
       username: TG_USER?.username || TG_USER?.first_name || 'User',
       photo: TG_USER?.photo_url || '',
       points: 0,
@@ -144,29 +144,27 @@ async function ensureUserDoc(){
       createdAt: serverTimestamp()
     });
   } else {
-      console.log("✅ User document exists.");
-      const data = snap.data();
-      userData = data; // Load existing data
-      const lastResetDate = data.lastResetDate?.toDate();
-      
-      // Check if lastResetDate is before today's midnight
-      if (lastResetDate && lastResetDate < today) {
-        await updateDoc(ref, {
-          adsWatchedToday: 0,
-          lastResetDate: serverTimestamp()
-        });
-        console.log("🔄 Daily ad count reset.");
-        userData.adsWatchedToday = 0; // Update local state immediately
-      }
+    console.log("✅ User document exists.");
+    const data = snap.data();
+    userData = data;
+    const lastResetDate = data.lastResetDate?.toDate();
+    if (lastResetDate && lastResetDate < today) {
+      await updateDoc(ref, {
+        adsWatchedToday: 0,
+        lastResetDate: serverTimestamp()
+      });
+      console.log("🔄 Daily ad count reset.");
+      userData.adsWatchedToday = 0;
     }
+  }
 }
 
 // ======================= Load User Data =======================
-async function loadUserData(){
-  if(!UID) return;
-  const ref = doc(db, 'users', UID);
+async function loadUserData() {
+  if (!FIREBASE_UID) return;
+  const ref = doc(db, 'users', FIREBASE_UID);
   const snap = await getDoc(ref);
-  if(!snap.exists()) {
+  if (!snap.exists()) {
     console.warn("⚠️ User data missing in Firestore!");
     return;
   }
@@ -180,13 +178,11 @@ async function loadUserData(){
   pMoney.textContent = `৳${money}`;
   document.getElementById('refCount').textContent = String(userData.referrals);
   document.getElementById('refPoints').textContent = String(userData.referralPoints);
-  refLink.value = `https://t.me/gravity_ad_bot?start=${UID}`;
-  
-  // Update new ad-related UI elements
+  refLink.value = `https://t.me/gravity_ad_bot?start=${TG_USER ? TG_USER.id : ''}`;
+
   adsWatchedTodayEl.textContent = String(userData.adsWatchedToday || 0);
   adsWatchedCounter.textContent = String(userData.adsWatchedToday || 0);
-  
-  // Check ad cooldown only if ad limit is reached
+
   if (userData.adsWatchedToday >= DAILY_AD_LIMIT) {
     checkAdCooldown();
   } else {
@@ -204,7 +200,7 @@ function checkAdCooldown() {
   const now = Date.now();
   const lastAdTime = userData.lastAdWatch?.toDate()?.getTime() || 0;
   const cooldownEnd = lastAdTime + AD_COOLDOWN_MINUTES * 60 * 1000;
-  
+
   if (cooldownEnd > now) {
     watchAdBtn.disabled = true;
     cooldownTimerEl.classList.remove('hidden');
@@ -240,27 +236,30 @@ function updateCooldownTimer(cooldownEnd) {
 }
 
 // ======================= Firebase Boot =======================
-async function boot(){
+async function boot() {
   console.log("🚀 Booting Firebase...");
   await signInAnonymously(auth).catch(console.error);
-  onAuthStateChanged(auth, async ()=>{
-    if (!UID && auth.currentUser?.uid) {
-      UID = auth.currentUser.uid;
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      FIREBASE_UID = user.uid;
+      console.log("✅ Firebase UID:", FIREBASE_UID);
+      await ensureUserDoc();
+      await loadUserData();
+      setupTaskAndBonusListeners(db, FIREBASE_UID, loadUserData);
+    } else {
+      console.log("❌ Firebase user not authenticated.");
     }
-    await ensureUserDoc();
-    await loadUserData();
-    setupTaskAndBonusListeners(db, UID, loadUserData);
   });
 }
 boot();
 
 // ======================= Watch Ads =======================
-watchAdBtn.addEventListener('click', async ()=>{
-  if(!UID) {
-    console.error("❌ UID missing. Cannot reward points.");
+watchAdBtn.addEventListener('click', async () => {
+  if (!FIREBASE_UID) {
+    console.error("❌ Firebase UID missing. Cannot reward points.");
     return alert(DICT[lang].auth_error);
   }
-  
+
   if (watchAdBtn.disabled) {
     return;
   }
@@ -268,22 +267,22 @@ watchAdBtn.addEventListener('click', async ()=>{
   const startTime = Date.now();
 
   try {
-    if(typeof window.show_9669121 === 'function'){
+    if (typeof window.show_9669121 === 'function') {
       console.log("✅ Monetag SDK Loaded. Showing ad...");
       await window.show_9669121();
       const watchTime = Date.now() - startTime;
-      
+
       if (watchTime < 15000) {
         alert(DICT[lang].ad_watch_too_short);
         return;
       }
-      
+
       console.log("🎯 Ad watched successfully. Updating Firestore...");
-      
+
       const updatedAdsWatched = (userData.adsWatchedToday || 0) + 1;
       const isLastAd = updatedAdsWatched >= DAILY_AD_LIMIT;
-      
-      await updateDoc(doc(db,'users',UID), { 
+
+      await updateDoc(doc(db, 'users', FIREBASE_UID), {
         points: increment(AD_REWARD_COINS),
         adsWatchedToday: increment(1),
         adsWatchedTotal: increment(1),
@@ -293,12 +292,12 @@ watchAdBtn.addEventListener('click', async ()=>{
       console.log("✅ Firestore points updated!");
       await loadUserData();
       alert(DICT[lang].ad_success);
-      
+
       if (isLastAd) {
         checkAdCooldown();
         alert(DICT[lang].redirect_after_ads);
         setTimeout(() => {
-          window.location.href = "YOUR_REDIRECT_LINK_HERE";
+          // window.location.href = "YOUR_REDIRECT_LINK_HERE";
         }, 3000);
       }
 
@@ -306,44 +305,48 @@ watchAdBtn.addEventListener('click', async ()=>{
       console.warn("⚠️ Monetag SDK not loaded yet!");
       alert(DICT[lang].ad_not_ready);
     }
-  } catch (err){
+  } catch (err) {
     console.error("❌ Ad failed:", err);
     alert(DICT[lang].ad_failed);
   }
 });
 
 // ======================= Copy Referral =======================
-copyRef.addEventListener('click', async ()=>{
+copyRef.addEventListener('click', async () => {
   try {
     await navigator.clipboard.writeText(refLink.value);
     alert(DICT[lang].link_copied);
-  } catch (e){
+  } catch (e) {
     console.error(e);
     alert(DICT[lang].copy_failed);
   }
 });
 
 // ======================= Withdraw Form =======================
-withdrawForm.addEventListener('submit', async (e)=>{
+withdrawForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const method = document.getElementById('payMethod').value;
   const accountId = document.getElementById('accountId').value.trim();
   const amount = Number(document.getElementById('amount').value || 0);
 
-  if(!method || !accountId || amount <= 0) return alert(DICT[lang].fill_form);
-  if(amount > (userData.points || 0)) return alert(DICT[lang].not_enough_coins);
+  if (!method || !accountId || amount <= 0) return alert(DICT[lang].fill_form);
+  if (amount > (userData.points || 0)) return alert(DICT[lang].not_enough_coins);
 
-  const mins = { bkash:10000, nagad:10000, rocket:10000, binance:100000 };
+  const mins = { bkash: 10000, nagad: 10000, rocket: 10000, binance: 100000 };
   const min = mins[method] || 10000;
-  if(amount < min) return alert(DICT[lang].min_withdraw.replace('{}', min).replace('[]', method));
+  if (amount < min) return alert(DICT[lang].min_withdraw.replace('{}', min).replace('[]', method));
 
   try {
-    await updateDoc(doc(db,'users',UID), { points: increment(-amount) });
-    const wref = doc(db,'withdrawals', `${UID}_${Date.now()}`);
+    await updateDoc(doc(db, 'users', FIREBASE_UID), { points: increment(-amount) });
+    const wref = doc(db, 'withdrawals', `${FIREBASE_UID}_${Date.now()}`);
     await setDoc(wref, {
-      telegramId: UID,
-      method, accountId, amount,
-      status: 'pending', createdAt: serverTimestamp()
+      telegramId: TG_USER ? String(TG_USER.id) : null,
+      firebaseUID: FIREBASE_UID,
+      method,
+      accountId,
+      amount,
+      status: 'pending',
+      createdAt: serverTimestamp()
     });
     await loadUserData();
     alert(DICT[lang].withdraw_success);
