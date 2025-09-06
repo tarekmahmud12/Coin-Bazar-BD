@@ -123,6 +123,10 @@ input::placeholder{color:var(--muted)}
   color:var(--danger);
 }
 
+.hidden {
+  display: none !important;
+}
+
 /* ===== Responsive ===== */
 @media (min-width:900px){
   .container{padding:28px}
